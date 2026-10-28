@@ -4,7 +4,7 @@ const path = require('path');
 const ExcelJS = require('exceljs');
 const { getBrandAssets } = require('./watermark');
 
-const GOLD = 'FFD4AF37', INK = 'FF111111', INK2 = 'FF1F1F1F', PAPER = 'FFF7F4EA', GREY = 'FF6B6B6B', LINE = 'FFD9D9D9';
+const GOLD = 'FFEF4444', INK = 'FF111111', INK2 = 'FF1F1F1F', PAPER = 'FFFBF4F4', GREY = 'FF6B6B6B', LINE = 'FFD9D9D9';
 const FMT = { money: '"S/ "#,##0.00', int: '#,##0', date: 'dd/mm/yyyy', time: 'hh:mm', min: '0', dec: '0.00', pct: '0.0%', text: '@' };
 const ORDER = ['daily', 'methods', 'payments', 'sales', 'topProducts', 'inventory', 'memberships', 'plans', 'members', 'expiring', 'atRisk',
   'attendance', 'hourly', 'weekday', 'heatmap', 'denied', 'shifts', 'expenses'];

@@ -466,7 +466,7 @@
             <button class="btn sm" id="todaybtn">Hoy</button>
           </div>
           <div class="row gap wrap">
-            <button class="btn sm ok" id="dpbtn">${RD.icon('ticket')} Pase Diario (S/ 5)</button>
+            <button class="btn sm ok" id="dpbtn">${RD.icon('ticket')} Pase Diario</button>
             <button class="btn sm primary" id="posbtn">${RD.icon('store')} Venta rápida tienda</button>
             <button class="btn sm danger" id="expbtn">${RD.icon('expense')} Registrar Gasto</button>
           </div>
@@ -479,7 +479,7 @@
             <div class="l">Total Ingresos del Día</div>
           </div>
           <div class="stat">
-            <div class="v" style="color:#f5b400">${money(cash.gym_income || 0)}</div>
+            <div class="v" style="color:#ef4444">${money(cash.gym_income || 0)}</div>
             <div class="l">${RD.icon('dumbbell')} Ingresos Gimnasio (Membresías + Pases)</div>
           </div>
           <div class="stat">
@@ -1607,31 +1607,7 @@
   }
 
   RD.LOGO_SVG = function (size = 54) {
-    return `<svg viewBox="0 0 100 100" style="width:${size}px;height:${size}px;display:inline-block;vertical-align:middle">
-      <defs>
-        <linearGradient id="rdGold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#fbbf24"/>
-          <stop offset="50%" stop-color="#f59e0b"/>
-          <stop offset="100%" stop-color="#b45309"/>
-        </linearGradient>
-        <linearGradient id="rdDark" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#1e293b"/>
-          <stop offset="100%" stop-color="#0f172a"/>
-        </linearGradient>
-      </defs>
-      <polygon points="50,4 92,20 84,72 50,96 16,72 8,20" fill="url(#rdDark)" stroke="url(#rdGold)" stroke-width="3.5" stroke-linejoin="round"/>
-      <polygon points="50,11 85,25 78,68 50,88 22,68 15,25" fill="none" stroke="url(#rdGold)" stroke-width="1.2" opacity="0.6"/>
-      <rect x="26" y="32" width="48" height="3.5" rx="1.5" fill="url(#rdGold)"/>
-      <rect x="22" y="27" width="5" height="13.5" rx="1.5" fill="url(#rdGold)"/>
-      <rect x="73" y="27" width="5" height="13.5" rx="1.5" fill="url(#rdGold)"/>
-      <rect x="18" y="29.5" width="3" height="8.5" rx="1" fill="#fbbf24"/>
-      <rect x="79" y="29.5" width="3" height="8.5" rx="1" fill="#fbbf24"/>
-      <text x="50" y="62" font-family="'Impact', 'Arial Black', sans-serif" font-weight="900" font-size="25" fill="url(#rdGold)" text-anchor="middle" letter-spacing="1.5">RD</text>
-      <text x="50" y="74" font-family="'Arial Black', sans-serif" font-weight="800" font-size="6" fill="#f8fafc" text-anchor="middle" letter-spacing="2">FITNESS CLUB</text>
-      <polygon points="50,78 51.5,82 55.5,82 52.5,84 53.5,88 50,85.5 46.5,88 47.5,84 44.5,82 48.5,82" fill="url(#rdGold)"/>
-      <polygon points="41,79 42,81.5 44.5,81.5 42.5,83 43.2,85.5 41,84 38.8,85.5 39.5,83 37.5,81.5 40,81.5" fill="url(#rdGold)" opacity="0.8"/>
-      <polygon points="59,79 60,81.5 62.5,81.5 60.5,83 61.2,85.5 59,84 56.8,85.5 57.5,83 55.5,81.5 58,81.5" fill="url(#rdGold)" opacity="0.8"/>
-    </svg>`;
+    return `<img src="/logo.svg?v=6.0" alt="GIMNASIO RED GYM" style="width:${size}px;height:${size}px;object-fit:contain;display:inline-block;vertical-align:middle;border-radius:10px">`;
   };
 
   RD.memberAttendanceSheetModal = async function (memberId, fromDate, toDate) {
@@ -1663,8 +1639,8 @@
             </div>
             <div class="grow">
               <h2 style="color:var(--gold);font-weight:900;letter-spacing:1px">${esc(set.gym_name || 'GIMNASIO RED GYM')} - CHIVAY</h2>
-              <div class="small muted">${esc(set.gym_slogan || 'Disciplina · Constancia · Resultados · Valle del Colca')}</div>
-              <div class="tiny muted">RUC: ${esc(set.gym_ruc || '10702548911')} · ${esc(RD.cleanAddress(set.gym_address))} · Tel: ${esc(set.gym_phone || '954196867')}</div>
+              <div class="small muted">${esc(set.gym_slogan || 'Fuerza · Pasión · Resultados · Valle del Colca')}</div>
+              <div class="tiny muted">${set.gym_ruc ? 'RUC: ' + esc(set.gym_ruc) + ' · ' : ''}${esc(RD.cleanAddress(set.gym_address))} · Tel: ${esc(set.gym_phone || '954196867')}</div>
             </div>
             <div class="text-right no-print">
               <button class="btn primary sm" id="btnprintsheet">${RD.icon('printer')} Imprimir / Guardar PDF</button>
@@ -1812,9 +1788,9 @@
   RD.openGoogleSheetsSyncModal = googleSheetsSyncModal;
   function googleSheetsSyncModal(settings = {}) {
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const prodHost = 'https://rd-fitness.onrender.com';
+    const prodHost = 'https://red-gym.onrender.com';
     const effectiveOrigin = isLocal ? prodHost : window.location.origin;
-    const key = settings.google_sheets_key || 'RD-CHIVAY-2026';
+    const key = settings.google_sheets_key || '';
     let currentSep = 'semicolon';
     let currentFeed = 'daily';
 
@@ -2312,7 +2288,7 @@ function verEstado() {
             ${RD.LOGO_SVG(46)}
             <div>
               <h2 style="margin:0">${esc(settings.gym_name || 'GIMNASIO RED GYM')} - CHIVAY</h2>
-              <p class="small muted" style="margin:0">RUC: ${esc(settings.gym_ruc || '10702548911')} · ${esc(RD.cleanAddress(settings.gym_address))} · Tel: ${esc(settings.gym_phone || '954196867')}</p>
+              <p class="small muted" style="margin:0">${settings.gym_ruc ? 'RUC: ' + esc(settings.gym_ruc) + ' · ' : ''}${esc(RD.cleanAddress(settings.gym_address))} · Tel: ${esc(settings.gym_phone || '954196867')}</p>
             </div>
           </div>
           <h3>REPORTE: ${channel === 'consolidated' ? 'CONSOLIDADO GENERAL EJECUTIVO' : channel === 'gym' ? 'INGRESOS Y RETENCIÓN DEL GIMNASIO' : channel === 'store' ? 'VENTAS, INVENTARIO Y RENTABILIDAD DE TIENDITA' : channel === 'attendance' ? 'CONTROL DE ASISTENCIAS, HORARIOS Y RENDIMIENTO' : channel === 'security' ? 'VERIFICACIÓN DE PRESENCIA Y AUDITORÍA DE ACCESOS' : 'HISTORIAL Y AUDITORÍA DE TURNOS'}</h3>
@@ -2366,7 +2342,7 @@ function verEstado() {
           btn.disabled = true;
           btn.innerHTML = `${RD.icon('hourglass')} Generando Excel...`;
           try {
-            const fn = await RD.downloadAuth(`/reports/export/excel?from=${from}&to=${to}`, `Reporte_RD_Fitness_${from}_al_${to}.xlsx`);
+            const fn = await RD.downloadAuth(`/reports/export/excel?from=${from}&to=${to}`, `Reporte_RED_GYM_${from}_al_${to}.xlsx`);
             RD.toast('Excel descargado con éxito: ' + fn, 'ok');
           } catch (err) {
             RD.toast(err.message || 'Error al descargar Excel', 'err');
@@ -2408,13 +2384,13 @@ function verEstado() {
         <!-- KPI EJECUTIVOS DE ALTA VISIBILIDAD -->
         <div class="grid g4 mb">
           <div class="stat gold watermark-container">
-            <div class="watermark-bg" style="font-size:2.4rem">RD</div>
+            <div class="watermark-bg" style="font-size:2.4rem">RED GYM</div>
             <div class="v">${money(c.totalIncome || 0)}</div>
             <div class="l">${RD.icon('chart')} Ingresos Consolidados (${c.txCount || 0} cobros)</div>
             <div class="tiny muted mt2">Promedio diario: <b class="gold">${money(c.avgDailyIncome || 0)}/día</b></div>
           </div>
           <div class="stat">
-            <div class="v" style="color:#f5b400">${money(c.totalGymIncome || 0)}</div>
+            <div class="v" style="color:#ef4444">${money(c.totalGymIncome || 0)}</div>
             <div class="l">${RD.icon('dumbbell')} Caja Gimnasio (${gymPct}% del total)</div>
             <div class="tiny muted mt2">${d.newMembers || 0} nuevos · ${d.renewals || 0} renovaciones</div>
           </div>
@@ -2432,7 +2408,7 @@ function verEstado() {
 
         <!-- ARQUEO GLOBAL Y AUDITORÍA ANTIFRAUDE DIGITAL -->
         <div class="card mb watermark-container">
-          <div class="watermark-bg">AUDITORIA RD</div>
+          <div class="watermark-bg">AUDITORIA RED GYM</div>
           <div class="row between wrap gap" style="position:relative;z-index:1">
             <div>
               <h3>${RD.icon('shield')} Arqueo Financiero y Separación de Fondos</h3>
@@ -2461,7 +2437,7 @@ function verEstado() {
               <div style="font-size:1.3rem;font-weight:900;color:#f87171;margin-top:2px">-${money(c.totalExpense || 0)}</div>
               <div class="tiny muted">${(c.expensesList || []).length} egresos documentados</div>
             </div>
-            <div style="background:rgba(245,180,0,0.08);border:1px solid rgba(245,180,0,0.25);padding:.75rem;border-radius:10px">
+            <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);padding:.75rem;border-radius:10px">
               <div class="tiny muted">${RD.icon('clock', '', 13)} TURNOS DE CAJA AUDITADOS</div>
               <div style="font-size:1.3rem;font-weight:900;color:var(--gold);margin-top:2px">${(c.shifts || []).length} turnos</div>
               <div class="tiny muted">${c.activeDaysCount || 0} días con movimiento comercial</div>
@@ -2474,7 +2450,7 @@ function verEstado() {
           <div class="row between wrap gap mb">
             <div>
               <h3>${RD.icon('chart')} Evolución Visual de Ingresos Diarios (Gimnasio + Tiendita)</h3>
-              <p class="muted small">Barras apiladas proporcionales por fecha: <span style="color:#f5b400;font-weight:700">■ Gimnasio</span> · <span style="color:#60a5fa;font-weight:700">■ Tiendita</span> · <span style="color:#4ade80;font-weight:700">● Utilidad Neta</span></p>
+              <p class="muted small">Barras apiladas proporcionales por fecha: <span style="color:#ef4444;font-weight:700">■ Gimnasio</span> · <span style="color:#60a5fa;font-weight:700">■ Tiendita</span> · <span style="color:#4ade80;font-weight:700">● Utilidad Neta</span></p>
             </div>
           </div>
           ${daily.length ? `
@@ -2519,7 +2495,7 @@ function verEstado() {
                   ${matrixRows.map(r => `
                     <tr>
                       <td><b>${esc(r.label)}</b></td>
-                      <td style="color:#f5b400">${money(r.gymAmt)}</td>
+                      <td style="color:#ef4444">${money(r.gymAmt)}</td>
                       <td style="color:#60a5fa">${money(r.storeAmt)}</td>
                       <td class="muted small">${r.txCount}</td>
                       <td style="font-weight:800;color:#4ade80">${money(r.totalAmt)}</td>
@@ -2575,14 +2551,14 @@ function verEstado() {
                   return `
                   <tr>
                     <td><b>${row.day}</b></td>
-                    <td style="color:#f5b400;font-weight:700">${money(row.gym)}</td>
+                    <td style="color:#ef4444;font-weight:700">${money(row.gym)}</td>
                     <td style="color:#60a5fa;font-weight:700">${money(row.store)}</td>
                     <td style="font-weight:800">${money(row.total)}</td>
                     <td class="bad">${row.expense > 0 ? '-' + money(row.expense) : 'S/ 0.00'}</td>
                     <td style="font-weight:800;color:${row.net >= 0 ? '#4ade80' : '#f87171'}">${money(row.net)}</td>
                     <td class="no-print">
                       <div style="display:flex;height:8px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,0.08)">
-                        <div style="width:${gW}%;background:#f5b400" title="Gimnasio ${gW}%"></div>
+                        <div style="width:${gW}%;background:#ef4444" title="Gimnasio ${gW}%"></div>
                         <div style="width:${sW}%;background:#60a5fa" title="Tiendita ${sW}%"></div>
                       </div>
                     </td>
@@ -2591,9 +2567,9 @@ function verEstado() {
               </tbody>
               ${daily.length ? `
               <tfoot>
-                <tr style="background:rgba(245,180,0,0.1);font-weight:900;border-top:2px solid var(--gold)">
+                <tr style="background:rgba(239,68,68,0.1);font-weight:900;border-top:2px solid var(--gold)">
                   <td>TOTAL PERÍODO (${daily.length} días)</td>
-                  <td style="color:#f5b400">${money(c.totalGymIncome || 0)}</td>
+                  <td style="color:#ef4444">${money(c.totalGymIncome || 0)}</td>
                   <td style="color:#60a5fa">${money(c.totalStoreIncome || 0)}</td>
                   <td>${money(c.totalIncome || 0)}</td>
                   <td class="bad">-${money(c.totalExpense || 0)}</td>
@@ -2625,7 +2601,7 @@ function verEstado() {
             <div class="tiny muted mt2">${payments.length} cobros registrados</div>
           </div>
           <div class="stat">
-            <div class="v" style="color:#f5b400">${dailyPasses.length} pases (${money(dailyPassTotal)})</div>
+            <div class="v" style="color:#ef4444">${dailyPasses.length} pases (${money(dailyPassTotal)})</div>
             <div class="l">${RD.icon('ticket')} Pases Diarios Emitidos</div>
             <div class="tiny muted mt2">Ingreso rápido de visitantes</div>
           </div>
@@ -2668,7 +2644,7 @@ function verEstado() {
                       </td>
                     </tr>`;
                   }).join('') || '<tr><td colspan="4" class="empty">Sin membresías vendidas en este rango</td></tr>'}
-                  <tr style="background:rgba(245,180,0,.07)">
+                  <tr style="background:rgba(239,68,68,.07)">
                     <td><b>${RD.icon('ticket')} Pase Diario / Visita Libre</b></td>
                     <td>${dailyPasses.length} pases</td>
                     <td class="gold" style="font-weight:800">${money(dailyPassTotal)}</td>
@@ -2766,7 +2742,7 @@ function verEstado() {
                     <td class="small">${esc(p.concept)}</td>
                     <td><span class="badge ${p.method === 'yape' ? 'warn' : p.method === 'plin' ? 'info' : 'ok'}">${esc(p.method)}</span></td>
                     <td>${verBadge}</td>
-                    <td style="font-weight:800;color:#f5b400">${money(p.amount)}</td>
+                    <td style="font-weight:800;color:#ef4444">${money(p.amount)}</td>
                     <td class="no-print"><button class="icon-btn" data-receipt="${p.id}" title="Ver e Imprimir Boleta">${RD.icon('receipt')}</button></td>
                   </tr>`;
                 }).join('') || '<tr><td colspan="8" class="empty">Sin cobros de membresías o pases</td></tr>'}
@@ -3009,7 +2985,7 @@ function verEstado() {
                     <td>${s.day}</td>
                     <td class="small muted">${s.opened_at ? RD.fmtTime(s.opened_at) : '—'}</td>
                     <td class="small muted">${s.closed_at ? RD.fmtTime(s.closed_at) : '—'}</td>
-                    <td style="color:#f5b400">${money(s.initial_cash || 0)}</td>
+                    <td style="color:#ef4444">${money(s.initial_cash || 0)}</td>
                     <td style="font-weight:700">${money(s.expected_cash || 0)}</td>
                     <td style="font-weight:700;color:#2563eb">${money(s.actual_cash || 0)}</td>
                     <td>${diffBadge}</td>
@@ -3076,7 +3052,7 @@ function verEstado() {
             <div class="l">${RD.icon('users')} Total Asistencias Registradas</div>
           </div>
           <div class="stat">
-            <div class="v" style="color:#f5b400">${att.memberVisits || 0} socios / ${att.dailyVisits || 0} pases</div>
+            <div class="v" style="color:#ef4444">${att.memberVisits || 0} socios / ${att.dailyVisits || 0} pases</div>
             <div class="l">${RD.icon('dumbbell')} Socios vs ${RD.icon('ticket')} Pases Diarios</div>
           </div>
           <div class="stat">
@@ -3199,7 +3175,7 @@ function verEstado() {
             <p class="muted small mb">Distribución por bloques horarios y horas pico en sala de máquinas.</p>
 
             <div class="grid g3 gap mb">
-              <div style="background:rgba(245,180,0,0.08);border:1px solid rgba(245,180,0,0.22);border-radius:8px;padding:.55rem;text-align:center">
+              <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.22);border-radius:8px;padding:.55rem;text-align:center">
                 <div class="tiny muted">MAÑANA (05h-12h)</div>
                 <div style="font-size:1.15rem;font-weight:900;color:var(--gold)">${shifts.morning || 0} <span class="tiny">(${Math.round(((shifts.morning || 0) / totShift) * 100)}%)</span></div>
               </div>
@@ -3704,7 +3680,7 @@ function verEstado() {
         <label class="field"><span>Eslogan</span><input name="gym_slogan" value="${esc(s.gym_slogan)}"></label>
         <div class="grid g2 keep">
           <label class="field"><span>Teléfono / WhatsApp *</span><input name="gym_phone" value="${esc(s.gym_phone)}" required></label>
-          <label class="field"><span>Color de marca</span><input name="color" type="color" value="${esc(s.color || '#f5b400')}"></label>
+          <label class="field"><span>Color de marca</span><input name="color" type="color" value="${esc(s.color || '#ef4444')}"></label>
         </div>
         <label class="field"><span>Dirección física</span><input name="gym_address" value="${esc(s.gym_address)}"></label>
         <label class="field"><span>Horario de atención</span><input name="opening" value="${esc(s.opening)}"></label>
@@ -3742,7 +3718,7 @@ function verEstado() {
         RD.toast('Ajustes guardados');
         RD.pub = await (await fetch('/api/public')).json();
         localStorage.setItem('rd_public', JSON.stringify(RD.pub));
-        document.documentElement.style.setProperty('--gold', RD.pub.color || '#f5b400');
+        document.documentElement.style.setProperty('--gold', RD.pub.color || '#ef4444');
       } catch (err) {
         RD.toast(err.message, 'err');
       }
@@ -4211,7 +4187,7 @@ function verEstado() {
     el.querySelector('#btn-backup-db').onclick = async () => {
       try {
         RD.toast('Generando copia SQLite...', 'info');
-        const fn = await RD.downloadAuth('/backup', 'rdfitness_backup.db');
+        const fn = await RD.downloadAuth('/backup', 'redgym_backup.db');
         RD.toast('Copia descargada con éxito: ' + fn, 'ok');
       } catch (err) {
         RD.toast(err.message || 'Error al descargar respaldo', 'err');
@@ -4250,7 +4226,7 @@ function verEstado() {
       try {
         RD.toast('Exportando datos a JSON...', 'info');
         const d = new Date().toISOString().slice(0, 10);
-        const fn = await RD.downloadAuth('/backup/export-json', `rdfitness_export_${d}.json`);
+        const fn = await RD.downloadAuth('/backup/export-json', `redgym_export_${d}.json`);
         RD.toast('Exportación completada: ' + fn, 'ok');
       } catch (err) {
         RD.toast(err.message || 'Error al exportar JSON', 'err');

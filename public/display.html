@@ -10,14 +10,14 @@
     :root {
       --bg: #07090e;
       --bg-card: rgba(12, 18, 32, 0.94);
-      --bg-card-border: rgba(245, 180, 0, 0.42);
+      --bg-card-border: rgba(239,68,68, 0.42);
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --gold: #dc2626;
-      --gold-glow: rgba(245, 180, 0, 0.28);
+      --gold-glow: rgba(239,68,68, 0.28);
       --accent: #38bdf8;
       --topbar-bg: rgba(7, 9, 14, 0.9);
-      --topbar-border: rgba(245, 180, 0, 0.25);
+      --topbar-border: rgba(239,68,68, 0.25);
       --chip-bg: rgba(255, 255, 255, 0.06);
       --chip-border: rgba(255, 255, 255, 0.14);
       --qr-bg: #ffffff;
@@ -32,8 +32,8 @@
       --bg-card-border: #cbd5e1;
       --text: #0f172a;
       --text-muted: #475569;
-      --gold: #b45309;
-      --gold-glow: rgba(180, 83, 9, 0.2);
+      --gold: #b91c1c;
+      --gold-glow: rgba(185,28,28, 0.2);
       --accent: #0284c7;
       --topbar-bg: rgba(255, 255, 255, 0.94);
       --topbar-border: #cbd5e1;
@@ -174,7 +174,7 @@
       transform: translateY(-1px);
     }
     .ctrl-btn.active {
-      background: rgba(245, 180, 0, 0.16);
+      background: rgba(239,68,68, 0.16);
       border-color: var(--gold);
       color: var(--gold);
     }
@@ -344,8 +344,8 @@
       white-space: nowrap;
     }
     .ticker-pill {
-      background: rgba(245, 180, 0, 0.15);
-      border: 1px solid rgba(245, 180, 0, 0.4);
+      background: rgba(239,68,68, 0.15);
+      border: 1px solid rgba(239,68,68, 0.4);
       color: var(--gold);
       font-weight: 800;
       padding: 3px 10px;
@@ -405,9 +405,9 @@
       position: relative;
     }
     .promo-plan-box.featured {
-      background: linear-gradient(145deg, rgba(245, 180, 0, 0.16), rgba(245, 180, 0, 0.04));
+      background: linear-gradient(145deg, rgba(239,68,68, 0.16), rgba(239,68,68, 0.04));
       border-color: var(--gold);
-      box-shadow: 0 0 25px rgba(245, 180, 0, 0.15);
+      box-shadow: 0 0 25px rgba(239,68,68, 0.15);
     }
     .promo-plan-name {
       font-size: 0.9rem;
@@ -1112,7 +1112,7 @@
         <div class="cfg-row"><label>URL Cámara 1 (Zona Peso Libre):</label><input type="text" id="cfg_url_1" placeholder="http://192.168.1.64/stream1.mjpg"></div>
         <div class="cfg-row"><label>URL Cámara 2 (Zona Cardio y Máquinas):</label><input type="text" id="cfg_url_2" placeholder="http://192.168.1.65/stream1.mjpg"></div>
         <div class="cfg-row"><label>URL Cámara 3 (Recepción e Ingreso):</label><input type="text" id="cfg_url_3" placeholder="http://192.168.1.66/stream1.mjpg"></div>
-        <div class="cfg-row"><label>URL Cámara 4 (Exterior Sucre Lt. 10):</label><input type="text" id="cfg_url_4" placeholder="http://192.168.1.67/stream1.mjpg"></div>
+        <div class="cfg-row"><label>URL Cámara 4 (Exterior Calle Piérola):</label><input type="text" id="cfg_url_4" placeholder="http://192.168.1.67/stream1.mjpg"></div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -1145,7 +1145,7 @@
         <button class="demo-btn" data-demo="welcome">🟢 Simular Entrada QR</button>
         <button class="demo-btn" data-demo="goodbye">🔵 Simular Salida (1h 15m)</button>
         <button class="demo-btn" data-demo="denied">🔴 Simular Membresía Vencida</button>
-        <button class="demo-btn" data-demo="yape">🟣 Simular Cobro Yape S/ 60</button>
+        <button class="demo-btn" data-demo="yape">🟣 Simular Cobro Yape S/ 80</button>
         <button class="demo-btn" data-demo="promo">⭐ Lanzar Spot Publicitario</button>
         <button class="demo-btn" data-demo="cctv">🎥 Volver a Cámaras CCTV</button>
       </div>
@@ -1310,7 +1310,7 @@
                 <span class="cam-osd-time cam-osd-clock">--</span>
               </div>
               <div class="cam-hud-bottom">
-                <span>RD-DVR-CHIVAY-0${idx + 1}</span>
+                <span>RG-DVR-CHIVAY-0${idx + 1}</span>
                 <span>${c.fps} · REC</span>
               </div>
             </div>`;
@@ -1353,54 +1353,95 @@
 
       // ---------------- Spots Publicitarios Rotativos Programados ----------------
       function renderPromoSpotHtml(idx) {
-        if (idx % 2 === 0) {
+        const slide = idx % 3;
+        const meter = `<div class="success-meter" style="width:220px;margin:0"><div class="success-meter-bar" style="background:var(--gold);animation-duration:${tvConfig.promoDurationSec}s"></div></div>`;
+        if (slide === 0) {
           return `
             <div class="promo-card">
               <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
                 <div style="display:flex;align-items:center;gap:14px">
-                  <img src="/logo.svg" alt="" style="width:58px;height:58px">
+                  <img src="/logo.svg" alt="" style="width:64px;height:64px">
                   <div>
                     <div class="bill-tag" style="margin-bottom:4px">MEMBRESÍAS Y TARIFAS OFICIALES</div>
                     <h2 style="margin:0;font-size:2rem;font-weight:900">ENTRENA EN <span style="color:var(--gold)">GIMNASIO RED GYM</span></h2>
                   </div>
                 </div>
-                <span class="chip" style="border-color:var(--gold);color:var(--gold)">Pase Diario Libre: S/ 5.00</span>
+                <span class="chip" style="border-color:var(--gold);color:var(--gold)">Pase Diario: S/ 6 Musculación · S/ 8 Boxeo y Baile</span>
               </div>
-              <div class="promo-grid">
+              <div class="promo-grid" style="grid-template-columns:repeat(5,1fr)">
                 <div class="promo-plan-box">
-                  <div class="promo-plan-name">Plan Mensual</div>
-                  <div class="promo-plan-price">S/ 60</div>
+                  <div class="promo-plan-name">1 Mes</div>
+                  <div class="promo-plan-price">S/ 80</div>
                   <div class="promo-plan-sub">30 días · Acceso total + App</div>
                 </div>
+                <div class="promo-plan-box">
+                  <div class="promo-plan-name">2 Meses</div>
+                  <div class="promo-plan-price">S/ 140</div>
+                  <div class="promo-plan-sub">Ahorras S/ 20</div>
+                </div>
                 <div class="promo-plan-box featured">
-                  <div class="promo-plan-name" style="color:var(--gold)">Plan Trimestral ⭐</div>
-                  <div class="promo-plan-price">S/ 170</div>
-                  <div class="promo-plan-sub">3 meses · Ahorras S/ 10</div>
+                  <div class="promo-plan-name" style="color:var(--gold)">3 Meses ⭐</div>
+                  <div class="promo-plan-price">S/ 180</div>
+                  <div class="promo-plan-sub">Ahorras S/ 60</div>
                 </div>
                 <div class="promo-plan-box">
-                  <div class="promo-plan-name">Plan Semestral</div>
-                  <div class="promo-plan-price">S/ 300</div>
-                  <div class="promo-plan-sub">6 meses · Ahorras S/ 60</div>
+                  <div class="promo-plan-name">6 Meses</div>
+                  <div class="promo-plan-price">S/ 350</div>
+                  <div class="promo-plan-sub">Ahorras S/ 130</div>
                 </div>
                 <div class="promo-plan-box">
-                  <div class="promo-plan-name">Plan Anual VIP</div>
-                  <div class="promo-plan-price">S/ 500</div>
-                  <div class="promo-plan-sub">12 meses · Ahorras S/ 220</div>
+                  <div class="promo-plan-name">1 Año VIP</div>
+                  <div class="promo-plan-price">S/ 600</div>
+                  <div class="promo-plan-sub">Ahorras S/ 360</div>
                 </div>
               </div>
               <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
                 <span style="font-size:0.9rem;color:var(--text-muted)">Aceptamos <b>Yape, Plin, Efectivo y Tarjetas</b> · Incluye Carnet Digital QR y Rutinas</span>
-                <div class="success-meter" style="width:220px;margin:0"><div class="success-meter-bar" style="background:var(--gold);animation-duration:${tvConfig.promoDurationSec}s"></div></div>
+                ${meter}
+              </div>
+            </div>`;
+        }
+        if (slide === 1) {
+          return `
+            <div class="promo-card">
+              <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+                <img src="/logo.svg" alt="" style="width:64px;height:64px">
+                <div>
+                  <div class="bill-tag" style="margin-bottom:4px">NUESTROS SERVICIOS</div>
+                  <h2 style="margin:0;font-size:1.95rem;font-weight:900">FUERZA · PASIÓN · RESULTADOS</h2>
+                </div>
+              </div>
+              <div class="promo-grid" style="grid-template-columns:repeat(4,1fr)">
+                <div class="promo-plan-box" style="text-align:left">
+                  <div style="color:var(--gold);font-weight:900;font-size:1.05rem;margin-bottom:6px">Sala de Máquinas</div>
+                  <div class="promo-plan-sub">Musculación con máquinas y pesas libres para todos los niveles.</div>
+                </div>
+                <div class="promo-plan-box" style="text-align:left">
+                  <div style="color:var(--gold);font-weight:900;font-size:1.05rem;margin-bottom:6px">Zona de Boxeo</div>
+                  <div class="promo-plan-sub">Ring, sacos de golpeo y guantes de 12 oz. Pase diario S/ 8.</div>
+                </div>
+                <div class="promo-plan-box" style="text-align:left">
+                  <div style="color:var(--gold);font-weight:900;font-size:1.05rem;margin-bottom:6px">Clases de Baile</div>
+                  <div class="promo-plan-sub">Cardio, ritmo y tonificación en grupo. Pase diario S/ 8.</div>
+                </div>
+                <div class="promo-plan-box" style="text-align:left">
+                  <div style="color:var(--gold);font-weight:900;font-size:1.05rem;margin-bottom:6px">Entrenador y Tienda</div>
+                  <div class="promo-plan-sub">Rutinas guiadas, suplementos, accesorios y bebidas en recepción.</div>
+                </div>
+              </div>
+              <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+                <span style="font-size:0.9rem;color:var(--text-muted)">Lun a Sáb 5:30 am a 10:00 pm · Calle Piérola con Garcilaso de la Vega, Chivay · WhatsApp <b>954 196 867</b></span>
+                ${meter}
               </div>
             </div>`;
         }
         return `
           <div class="promo-card">
             <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
-              <img src="/logo.svg" alt="" style="width:58px;height:58px">
+              <img src="/logo.svg" alt="" style="width:64px;height:64px">
               <div>
                 <div class="bill-tag" style="margin-bottom:4px">TECNOLOGÍA Y RENDIMIENTO DEPORTIVO</div>
-                <h2 style="margin:0;font-size:1.95rem;font-weight:900">TU ENTRENADOR DIGITAL EN EL CELULAR + TIENDITA FITNESS</h2>
+                <h2 style="margin:0;font-size:1.95rem;font-weight:900">TU ENTRENADOR DIGITAL EN EL CELULAR + TIENDA FITNESS</h2>
               </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px">
@@ -1414,12 +1455,12 @@
               </div>
               <div class="promo-plan-box" style="text-align:left">
                 <div style="color:#10b981;font-weight:900;font-size:1.05rem;margin-bottom:6px">3. Hidratación y Energía</div>
-                <div class="promo-plan-sub">Aguas minerales, bebidas rehidratantes, proteínas y suplementos disponibles al instante en recepción.</div>
+                <div class="promo-plan-sub">Aguas, bebidas rehidratantes, proteínas, vendas y guantes disponibles al instante en recepción.</div>
               </div>
             </div>
             <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:0.88rem;color:var(--text-muted)">Monitoreo de seguridad activo en esquina inferior derecha (PiP)</span>
-              <div class="success-meter" style="width:220px;margin:0"><div class="success-meter-bar" style="background:var(--gold);animation-duration:${tvConfig.promoDurationSec}s"></div></div>
+              <span style="font-size:0.88rem;color:var(--text-muted)">Monitoreo de seguridad activo en esquina inferior derecha (PiP) cuando hay cámaras</span>
+              ${meter}
             </div>
           </div>`;
       }
@@ -1920,7 +1961,7 @@
           } else if (action === 'denied') {
             render({ mode: 'denied', name: 'LUIS CONDORI', end: '2026-10-10', reason: 'Membresía vencida hace 10 días. Renueva en recepción.' });
           } else if (action === 'yape') {
-            render({ mode: 'payment', title: 'Membresía 1 Mes - GIMNASIO RED GYM', amount: 60, merchant: 'GIMNASIO RED GYM', phone: '954196867', qr_payload: '00020101021226390012pe.bcrp.yape011151954196867520459995303604540560.005802PE5915GIMNASIO RED GYM6006CHIVAY6304ABCD' });
+            render({ mode: 'payment', title: 'Membresía 1 Mes - GIMNASIO RED GYM', amount: 80, merchant: 'GIMNASIO RED GYM', phone: '954196867', qr_payload: '00020101021226390012pe.bcrp.yape011151954196867520459995303604540580.005802PE5915GIMNASIO RED GYM6006CHIVAY6304ABCD' });
           } else if (action === 'promo') {
             currentEventState = { mode: 'idle' };
             triggerPromoSpot();

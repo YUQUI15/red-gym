@@ -1,7 +1,7 @@
 {
   "gym_name": "GIMNASIO RED GYM",
-  "exported_at": "2026-10-28T14:50:14.386Z",
-  "version": "2.8",
+  "exported_at": "2026-10-28T15:48:38.399Z",
+  "version": "3.0",
   "users": [
     {
       "id": 1,
@@ -14,13 +14,335 @@
       "created_at": "2026-10-11 20:14:01"
     }
   ],
+  "sessions": [
+    {
+      "token": "cdd20f234e59c04fc8d34767a497b5ebbe8b1379d54d0c5d",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-11 20:41:11",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "e7442cdacd2e7117d29c513b39ae55e293c0fdb658664eb1",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-11 23:21:40",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "37835123bd11201369f756725709d356e1d6531def8ad783",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-11 23:21:54",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "99fc015baa9f95f8434b9dfcc43bf8df7c5eb7583f5c2e9a",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-12 00:06:25",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "e003ba83fcf9f56421a5e435582cd4cc8216b00a3c69cd3b",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-12 00:07:24",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "c53037b56b27089d1ae5d90d0e6326e175daec8af2120858",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-12 00:07:34",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "3e8fda41750f281c9610c80544c8bd0664dce8be79f3dc9b",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-12 00:08:15",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "ab8146fe047bb98a839eeb2f246bc0ee14bff26bdb3ccd5d",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-12 14:51:09",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "bcfe7c9b57969a66d0272679ddfe9659cdc4040c7cd80ac8",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-12 23:20:05",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "09e08969dd0a299c607bc7655693498d6994443885f9d35a",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-12 23:22:16",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "277ccdc42ba06a1d6ed341c29e12ccc297d08fb371a6e22f",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-12 23:23:44",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "test-staff-1791905600632",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 15:33:20",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": null,
+      "ua": null
+    },
+    {
+      "token": "6c5f9b5066489d4e122fedb5ef6b850952a220ccc448e8bc",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 16:24:28",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 16:24:28",
+      "ua": "node"
+    },
+    {
+      "token": "f151d9e69c54a552458c0c478b522a4dd29a599830a16981",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 17:25:04",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 17:25:04",
+      "ua": ""
+    },
+    {
+      "token": "518233ce8dd34a64ce3b24ab5bbaa0303a470608e19bf556",
+      "kind": "member",
+      "ref_id": 1,
+      "created_at": "2026-10-13 17:25:04",
+      "device_id": null,
+      "device_label": "Dispositivo · Navegador",
+      "last_seen": "2026-10-13 17:25:04",
+      "ua": ""
+    },
+    {
+      "token": "b4a0399dfc3c63281a106b132b5c297a29388076eadb2575",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 18:09:56",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 18:09:56",
+      "ua": ""
+    },
+    {
+      "token": "2c260c3e3706f816b8cf40b192997ecb74dc5b955b01b85e",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 18:10:29",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 18:10:29",
+      "ua": ""
+    },
+    {
+      "token": "d41f523e9d84f66cfee6bcbeb8fe5c6487a33ea31f95f525",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 18:10:50",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 18:10:50",
+      "ua": ""
+    },
+    {
+      "token": "48439c958112cab997d49e5ffff421351cfd1d853b778ae6",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 18:11:42",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 18:11:42",
+      "ua": ""
+    },
+    {
+      "token": "8a37c5590347d48f1fe9b906d9c7c7c0357946e61c070c51",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 21:29:26",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 21:29:26",
+      "ua": "node"
+    },
+    {
+      "token": "5b71387e50c7603537d14c8745492bab081465d2e057c3f0",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 21:29:33",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 21:29:33",
+      "ua": "node"
+    },
+    {
+      "token": "c1238bcd0a9d395ec8beba16fba4f469c789e7a40f49f6b9",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 21:30:15",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 21:30:15",
+      "ua": "node"
+    },
+    {
+      "token": "386db9048f0aa27ea7a65ff04bc3066008e1848dec9b783a",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 21:31:25",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 21:31:25",
+      "ua": "node"
+    },
+    {
+      "token": "73ff75eae1007d01c3df73d8d900064b14f187def0c105aa",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 21:31:32",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 21:31:32",
+      "ua": "node"
+    },
+    {
+      "token": "13fa6f1d35b09d2a40cb5546ba843222ed5d7dd12cde0a4a",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-13 21:52:23",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-13 21:52:23",
+      "ua": "node"
+    },
+    {
+      "token": "95236faec88f4d7d37e418b9393a286477de9d6869c26ef8",
+      "kind": "member",
+      "ref_id": 1,
+      "created_at": "2026-10-13 23:32:25",
+      "device_id": null,
+      "device_label": "Dispositivo · Navegador",
+      "last_seen": "2026-10-13 23:32:25",
+      "ua": ""
+    },
+    {
+      "token": "209488220d9fe83d887c4670d4e538814dfc2c9c419a7af6",
+      "kind": "member",
+      "ref_id": 1,
+      "created_at": "2026-10-13 23:34:27",
+      "device_id": null,
+      "device_label": "Dispositivo · Navegador",
+      "last_seen": "2026-10-13 23:34:27",
+      "ua": ""
+    },
+    {
+      "token": "9f4faff3a08857f496297caec8e60b7dd87c4f733f3964fa",
+      "kind": "member",
+      "ref_id": 1,
+      "created_at": "2026-10-13 23:35:06",
+      "device_id": null,
+      "device_label": "Dispositivo · Navegador",
+      "last_seen": "2026-10-13 23:35:06",
+      "ua": ""
+    },
+    {
+      "token": "ce91a45f65e45feeb1a74448edb334208eb9cbb93543f906",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-14 16:17:43",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-14 16:17:43",
+      "ua": "node"
+    },
+    {
+      "token": "25ce91d412f279c303030b6b7650712d8d852485484fb186",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-23 21:00:09",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-23 21:00:09",
+      "ua": "node"
+    },
+    {
+      "token": "47efa81d5eed2d9e55043f5edc599c74e882831f3a39aa8a",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-23 21:04:45",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-23 21:04:45",
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0"
+    },
+    {
+      "token": "bd1552ab12915c2d442272cf601a7a819214809600bf2797",
+      "kind": "staff",
+      "ref_id": 1,
+      "created_at": "2026-10-28 15:48:37",
+      "device_id": null,
+      "device_label": null,
+      "last_seen": "2026-10-28 15:48:37",
+      "ua": "node"
+    }
+  ],
   "members": [
     {
       "id": 1,
-      "code": "RD-0001",
+      "code": "RG-0001",
       "name": "Juan Perez Colca",
       "dni": "71234567",
-      "phone": "982404043",
+      "phone": "954196867",
       "email": null,
       "birth": null,
       "gender": null,
@@ -42,7 +364,7 @@
     },
     {
       "id": 2,
-      "code": "RD-0002",
+      "code": "RG-0002",
       "name": "Juan Perez Test",
       "dni": "77579470",
       "phone": "987654321",
@@ -67,7 +389,7 @@
     },
     {
       "id": 3,
-      "code": "RD-0003",
+      "code": "RG-0003",
       "name": "CESAR FLORES MAQUE",
       "dni": "74575258",
       "phone": "938772662",
@@ -92,7 +414,7 @@
     },
     {
       "id": 4,
-      "code": "RD-0004",
+      "code": "RG-0004",
       "name": "luis flores",
       "dni": "74575257",
       "phone": "982797859",
@@ -357,7 +679,7 @@
       "id": 1,
       "uid": "dp-e6d99b8ece00e6e303c043fde4643a95",
       "member_id": null,
-      "code": "RD-DAY-261011-001",
+      "code": "RG-DAY-261011-001",
       "ts": "2026-10-11T23:21:54.496Z",
       "day": "2026-10-11",
       "hour": 18,
@@ -376,7 +698,7 @@
       "id": 2,
       "uid": "srv-621d2f03c4de07e4bcab8e83aa320af5",
       "member_id": 1,
-      "code": "RD-0001",
+      "code": "RG-0001",
       "ts": "2026-10-13T17:26:42.974Z",
       "day": "2026-10-13",
       "hour": 13,
@@ -395,7 +717,7 @@
       "id": 3,
       "uid": "srv-693b980c0b9fe1e6ff16a131d502ec62",
       "member_id": 2,
-      "code": "RD-0002",
+      "code": "RG-0002",
       "ts": "2026-10-13T18:11:42.988Z",
       "day": "2026-10-13",
       "hour": 13,
@@ -414,7 +736,7 @@
       "id": 4,
       "uid": "srv-3f85298a85de239ecdd06c43d1115dbe",
       "member_id": 3,
-      "code": "RD-0003",
+      "code": "RG-0003",
       "ts": "2026-10-16T17:08:02.342Z",
       "day": "2026-10-16",
       "hour": 12,
@@ -433,7 +755,7 @@
       "id": 5,
       "uid": "84ed5ef2-432a-4a67-92b4-aaba86c7010b",
       "member_id": 3,
-      "code": "RD-0003",
+      "code": "RG-0003",
       "ts": "2026-10-16T17:08:02.405Z",
       "day": "2026-10-16",
       "hour": 12,
@@ -452,7 +774,7 @@
       "id": 6,
       "uid": "srv-f38914ed48541cefbd5ebc3c473f8468",
       "member_id": 3,
-      "code": "RD-0003",
+      "code": "RG-0003",
       "ts": "2026-10-17T15:19:58.623Z",
       "day": "2026-10-17",
       "hour": 10,
@@ -471,7 +793,7 @@
       "id": 7,
       "uid": "43528a25-4269-4400-ab79-8d2c450978ea",
       "member_id": 3,
-      "code": "RD-0003",
+      "code": "RG-0003",
       "ts": "2026-10-17T15:19:58.643Z",
       "day": "2026-10-17",
       "hour": 10,
@@ -490,7 +812,7 @@
   "daily_passes": [
     {
       "id": 1,
-      "code": "RD-DAY-261011-001",
+      "code": "RG-DAY-261011-001",
       "name": "Carlos Test",
       "dni": "12345678",
       "phone": null,
@@ -536,7 +858,7 @@
     },
     {
       "id": 3,
-      "name": "Toalla RD",
+      "name": "Toalla Red Gym",
       "price": 15,
       "stock": 10,
       "active": 1,
@@ -727,7 +1049,7 @@
     },
     {
       "key": "gym_ruc",
-      "value": "10702548911"
+      "value": ""
     },
     {
       "key": "receipt_prefix",
@@ -6985,7 +7307,7 @@
     {
       "id": 1,
       "user_id": 1,
-      "user_name": "Administrador RD",
+      "user_name": "Administrador RED GYM",
       "shift_name": "Turno Mañana Test",
       "day": "2026-10-11",
       "opened_at": "2026-10-11T23:21:54.483Z",
@@ -7002,7 +7324,7 @@
     {
       "id": 2,
       "user_id": 1,
-      "user_name": "Administrador RD",
+      "user_name": "Administrador RED GYM",
       "shift_name": "Turno Mañana (6:00 am - 2:00 pm)",
       "day": "2026-10-16",
       "opened_at": "2026-10-16T17:07:50.713Z",

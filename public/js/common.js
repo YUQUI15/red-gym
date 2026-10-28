@@ -356,7 +356,7 @@
         } else if (url === '/members' && method === 'POST') {
           const newMem = {
             id: 'lmem_' + Date.now(),
-            code: 'RD' + String(Math.floor(1000 + Math.random() * 9000)),
+            code: 'RG' + String(Math.floor(1000 + Math.random() * 9000)),
             name: String(body?.name || 'SOCIO LOCAL').toUpperCase(),
             dni: body?.dni || '',
             phone: body?.phone || '',
@@ -533,219 +533,7 @@
     .join('');
 
   RD.LOGO_SVG = function (size = 54) {
-    return `<svg viewBox="0 0 100 100" style="width:${size}px;height:${size}px;display:inline-block;vertical-align:middle;flex-shrink:0">
-      <defs>
-        <linearGradient id="rdGold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#fbbf24"/>
-          <stop offset="50%" stop-color="#f59e0b"/>
-          <stop offset="100%" stop-color="#b45309"/>
-        </linearGradient>
-        <linearGradient id="rdDark" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#1e293b"/>
-          <stop offset="100%" stop-color="#0f172a"/>
-        </linearGradient>
-      </defs>
-      <polygon points="50,4 92,20 84,72 50,96 16,72 8,20" fill="url(#rdDark)" stroke="url(#rdGold)" stroke-width="3.5" stroke-linejoin="round"/>
-      <polygon points="50,11 85,25 78,68 50,88 22,68 15,25" fill="none" stroke="url(#rdGold)" stroke-width="1.2" opacity="0.6"/>
-      <rect x="26" y="32" width="48" height="3.5" rx="1.5" fill="url(#rdGold)"/>
-      <rect x="22" y="27" width="5" height="13.5" rx="1.5" fill="url(#rdGold)"/>
-      <rect x="73" y="27" width="5" height="13.5" rx="1.5" fill="url(#rdGold)"/>
-      <rect x="18" y="29.5" width="3" height="8.5" rx="1" fill="#fbbf24"/>
-      <rect x="79" y="29.5" width="3" height="8.5" rx="1" fill="#fbbf24"/>
-      <text x="50" y="62" font-family="'Impact', 'Arial Black', sans-serif" font-weight="900" font-size="25" fill="url(#rdGold)" text-anchor="middle" letter-spacing="1.5">RD</text>
-      <text x="50" y="74" font-family="'Arial Black', sans-serif" font-weight="800" font-size="6" fill="#f8fafc" text-anchor="middle" letter-spacing="2">FITNESS CLUB</text>
-      <polygon points="50,78 51.5,82 55.5,82 52.5,84 53.5,88 50,85.5 46.5,88 47.5,84 44.5,82 48.5,82" fill="url(#rdGold)"/>
-      <polygon points="41,79 42,81.5 44.5,81.5 42.5,83 43.2,85.5 41,84 38.8,85.5 39.5,83 37.5,81.5 40,81.5" fill="url(#rdGold)" opacity="0.8"/>
-      <polygon points="59,79 60,81.5 62.5,81.5 60.5,83 61.2,85.5 59,84 56.8,85.5 57.5,83 55.5,81.5 58,81.5" fill="url(#rdGold)" opacity="0.8"/>
-    </svg>`;
-  };
-
-  RD.openModal = (title, html, opts = {}) => {
-    const back = document.createElement('div'); back.className = 'modal-back';
-    back.innerHTML = `<div class="modal ${opts.wide ? 'wide' : ''}" role="dialog" aria-modal="true"><div class="modal-head"><h3 style="display:flex;align-items:center;gap:8px">${RD.safeTitle(title)}</h3><button class="icon-btn" data-close aria-label="Cerrar">${RD.icon('x', '', 18)}</button></div><div class="modal-body">${html}</div></div>`;
-    document.body.appendChild(back);
-    document.body.classList.add('no-scroll');
-    const close = () => { back.remove(); if (!document.querySelector('.modal-back')) document.body.classList.remove('no-scroll'); opts.onClose && opts.onClose(); };
-    back.addEventListener('click', e => { if (e.target === back && !opts.sticky) close(); if (e.target.closest('[data-close]')) close(); });
-    return { el: back.querySelector('.modal-body'), root: back, close };
-  };
-  RD.confirm = (title, text, okLabel = 'Confirmar', danger = false) => new Promise(resolve => {
-    const m = RD.openModal(title, `<p>${RD.esc(text)}</p><div class="row end gap"><button class="btn ghost" data-no>Cancelar</button><button class="btn ${danger ? 'danger' : 'primary'}" data-yes>${RD.safeTitle(okLabel)}</button></div>`, { onClose: () => resolve(false) });
-    m.el.querySelector('[data-no]').onclick = () => { m.close(); resolve(false); };
-    m.el.querySelector('[data-yes]').onclick = () => { m.root.remove(); document.body.classList.remove('no-scroll'); resolve(true); };
-  });
-  RD.prompt = (title, label, placeholder = '') => new Promise(resolve => {
-    const m = RD.openModal(title, `<label class="field"><span>${RD.esc(label)}</span><input id="pr-in" placeholder="${RD.esc(placeholder)}" autofocus></label><div class="row end gap"><button class="btn ghost" data-no>Cancelar</button><button class="btn primary" data-yes>Aceptar</button></div>`, { onClose: () => resolve(null) });
-    const inp = m.el.querySelector('#pr-in'); inp.focus();
-    const done = v => { m.root.remove(); document.body.classList.remove('no-scroll'); resolve(v); };
-    m.el.querySelector('[data-no]').onclick = () => done(null);
-    m.el.querySelector('[data-yes]').onclick = () => done(inp.value.trim() || null);
-    inp.onkeydown = e => { if (e.key === 'Enter') done(inp.value.trim() || null); };
-  });
-  RD.busy = async (btn, fn) => {
-    if (btn) { btn.disabled = true; btn.dataset.t = btn.innerHTML; btn.innerHTML = `${RD.icon('hourglass', '', 14)} Procesando…`; }
-    try { return await fn(); } finally { if (btn) { btn.disabled = false; if (btn.dataset.t !== undefined) btn.innerHTML = btn.dataset.t; } }
-  };
-
-  // ---------- Sonidos y Alertas Táctiles (Dual-Engine: HTML5 Audio Blob + Web Audio) ----------
-  let actx = null;
-  const ensureAudio = () => {
-    try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-      if (actx && actx.state === 'suspended') actx.resume().catch(() => {});
-    } catch {}
-    return actx;
-  };
-
-  // Genera un audio WAV PCM puro en memoria (Blob URL) con timbre de campana armónica
-  let chimeBlobUrl = null;
-  function getChimeBlobUrl() {
-    if (chimeBlobUrl) return chimeBlobUrl;
-    try {
-      const sampleRate = 22050;
-      const duration = 0.85;
-      const numSamples = Math.floor(sampleRate * duration);
-      const wavBytes = new Uint8Array(44 + numSamples * 2);
-      const view = new DataView(wavBytes.buffer);
-
-      view.setUint32(0, 0x52494646, false); // "RIFF"
-      view.setUint32(4, 36 + numSamples * 2, true);
-      view.setUint32(8, 0x57415645, false); // "WAVE"
-      view.setUint32(12, 0x666d7420, false); // "fmt "
-      view.setUint32(16, 16, true);
-      view.setUint16(20, 1, true); // PCM
-      view.setUint16(22, 1, true); // Mono
-      view.setUint32(24, sampleRate, true);
-      view.setUint32(28, sampleRate * 2, true);
-      view.setUint16(32, 2, true);
-      view.setUint16(34, 16, true);
-      view.setUint32(36, 0x64617461, false); // "data"
-      view.setUint32(40, numSamples * 2, true);
-
-      for (let i = 0; i < numSamples; i++) {
-        const t = i / sampleRate;
-        const decay = Math.exp(-4.2 * t);
-        const s = (Math.sin(2 * Math.PI * 880 * t) * 0.5 +
-                   Math.sin(2 * Math.PI * 1108.73 * t) * 0.3 +
-                   Math.sin(2 * Math.PI * 1318.51 * t) * 0.35 +
-                   Math.sin(2 * Math.PI * 1760 * t) * 0.2) * decay;
-        const val = Math.max(-1, Math.min(1, s * 0.85));
-        view.setInt16(44 + i * 2, val < 0 ? val * 0x8000 : val * 0x7FFF, true);
-      }
-      const blob = new Blob([wavBytes], { type: 'audio/wav' });
-      chimeBlobUrl = URL.createObjectURL(blob);
-      return chimeBlobUrl;
-    } catch {
-      return null;
-    }
-  }
-
-  let chimeAudio = null;
-  const getChimeAudio = () => {
-    if (!chimeAudio) {
-      try {
-        const url = getChimeBlobUrl();
-        if (url) {
-          chimeAudio = new Audio(url);
-          chimeAudio.volume = 1.0;
-        }
-      } catch {}
-    }
-    return chimeAudio;
-  };
-
-  // Desbloqueo activo en móviles en cualquier toque o clic
-  let audioUnlocked = false;
-  const unlockAudio = () => {
-    try {
-      ensureAudio();
-      const a = getChimeAudio();
-      if (a && !audioUnlocked) {
-        a.volume = 0.001;
-        const p = a.play();
-        if (p && typeof p.then === 'function') {
-          p.then(() => {
-            a.pause();
-            a.currentTime = 0;
-            a.volume = 1.0;
-            audioUnlocked = true;
-          }).catch(() => {});
-        }
-      }
-    } catch {}
-  };
-  ['click', 'touchstart', 'touchend', 'pointerdown'].forEach(ev => {
-    window.addEventListener(ev, unlockAudio, { passive: true });
-  });
-
-  RD.beep = (kind) => {
-    try {
-      const ctx = ensureAudio();
-      if (!ctx) return;
-      const seq = {
-        ok: [[880, .12]],
-        warn: [[660, .12], [660, .12]],
-        denied: [[220, .35], [180, .45]],
-        tick: [[1000, .05]],
-        done: [[880, .15], [1175, .25]],
-        bell: [[523.25, .15], [659.25, .15], [783.99, .25], [1046.50, .4]]
-      }[kind] || [];
-      let t = ctx.currentTime;
-      seq.forEach(([f, d]) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = kind === 'denied' ? 'sawtooth' : kind === 'bell' ? 'triangle' : 'sine';
-        o.frequency.value = f;
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(kind === 'bell' ? 0.7 : 0.4, t + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-        o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + d + 0.02); t += d + 0.05;
-      });
-      if ((kind === 'denied' || kind === 'bell') && navigator.vibrate) {
-        navigator.vibrate(kind === 'bell' ? [300, 150, 300, 150, 450] : [200, 100, 200]);
-      }
-    } catch { }
-  };
-
-  RD.playNotificationAlert = (mode = 'sound') => {
-    try {
-      if (mode === 'silent') return;
-      // 1. Vibración táctil física distintiva
-      if (navigator.vibrate) {
-        try {
-          navigator.vibrate(mode === 'vibrate' ? [350, 150, 350, 150, 450] : [250, 120, 250, 120, 400]);
-        } catch {}
-      }
-      if (mode === 'vibrate') return;
-
-      // 2. Timbre acústico de alta claridad (Motor A: HTML5 Audio)
-      try {
-        const a = getChimeAudio();
-        if (a) {
-          a.currentTime = 0;
-          a.volume = 1.0;
-          const p = a.play();
-          if (p && typeof p.then === 'function') {
-            p.catch(() => { RD.beep('bell'); });
-          }
-        } else {
-          RD.beep('bell');
-        }
-      } catch {
-        RD.beep('bell');
-      }
-
-      // Motor B: Web Audio API Oscillator
-      try { RD.beep('bell'); } catch {}
-    } catch {}
-  };
-
-  // ---------- QR ----------
-  RD.qrSvg = (text, { margin = 2, fg = '#000', bg = '#fff' } = {}) => {
-    const qr = window.qrcode(0, 'M'); qr.addData(text); qr.make();
-    const n = qr.getModuleCount(); let d = '';
-    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c + margin} ${r + margin}h1v1h-1z`;
-    const s = n + margin * 2;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${s} ${s}" shape-rendering="crispEdges"><rect width="${s}" height="${s}" fill="${bg}"/><path d="${d}" fill="${fg}"/></svg>`;
+    return `<img src="/logo.svg?v=6.0" alt="GIMNASIO RED GYM" style="width:${size}px;height:${size}px;object-fit:contain;display:inline-block;vertical-align:middle;border-radius:10px">`;
   };
 
   // Firma HMAC igual que el servidor
@@ -761,20 +549,20 @@
   RD.parsePayload = text => {
     const s = String(text || '').trim();
     if (!s) return null;
-    // Socio formal firmado: RD1.RD-0001.P1.xxxx o RD1.RD-0001.Dxxx.xxxx
-    const m = /^RD1\.(RD-\d{1,8})\.([PD])(\d+)\.([0-9a-f]{12})$/.exec(s);
+    // Socio formal firmado: RED1.RG-0001.P1.xxxx o RED1.RG-0001.Dxxx.xxxx
+    const m = /^(?:RED1|RED1)\.((?:RG|RD)-\d{1,8})\.([PD])(\d+)\.([0-9a-f]{12})$/.exec(s);
     if (m) return { type: 'member', code: m[1], kind: m[2], n: Number(m[3]), sig: m[4] };
 
-    // Pase diario firmado: RD1.DAY.RD-DAY-xxxx.2026-10-12.xxxx
-    const d = /^RD1\.DAY\.(RD-DAY-[A-Za-z0-9\-]+)\.(\d{4}-\d{2}-\d{2})\.([0-9a-f]{12})$/.exec(s);
+    // Pase diario firmado: RED1.DAY.RG-DAY-xxxx.2026-10-12.xxxx
+    const d = /^(?:RED1|RED1)\.DAY\.((?:RG|RD)-DAY-[A-Za-z0-9\-]+)\.(\d{4}-\d{2}-\d{2})\.([0-9a-f]{12})$/.exec(s);
     if (d) return { type: 'daily', code: d[1], day: d[2], sig: d[3] };
 
-    // Pase diario directo: RD-DAY-xxxx
-    if (/^RD-DAY-[A-Za-z0-9\-]+$/i.test(s)) return { type: 'daily_code', code: s.toUpperCase() };
+    // Pase diario directo: RG-DAY-xxxx
+    if (/^(?:RG|RD)-DAY-[A-Za-z0-9\-]+$/i.test(s)) return { type: 'daily_code', code: s.toUpperCase() };
 
-    // Socio directo: RD-0001 o RD0001
-    const mc = /^(RD-?\d{1,8})$/i.exec(s);
-    if (mc) return { type: 'member_code', code: mc[1].toUpperCase().replace(/^RD(?=\d)/, 'RD-') };
+    // Socio directo: RG-0001 o RG0001
+    const mc = /^((?:RG|RD)-?\d{1,8})$/i.exec(s);
+    if (mc) return { type: 'member_code', code: mc[1].toUpperCase().replace(/^(?:RG|RD)-?(?=\d)/i, 'RG-') };
 
     // Código de barras de producto de la tienda (EAN-13, UPC, Code 128: 4 a 20 caracteres)
     if (/^[0-9A-Za-z\-]{4,20}$/.test(s)) return { type: 'barcode', code: s };
@@ -783,7 +571,7 @@
   };
   RD.digitalPayload = async (code, key) => {
     const n = Math.floor(RD.now() / 60000);
-    return `RD1.${code}.D${n}.${await RD.hmac(key, `${code}|D${n}`)}`;
+    return `RED1.${code}.D${n}.${await RD.hmac(key, `${code}|D${n}`)}`;
   };
 
   // ---------- Generador de Payload Interoperable Yape / Plin (BCRP / EMVCo MPM) ----------
@@ -1004,13 +792,13 @@
   };
 
   // Limpiador oficial de dirección (elimina referencias externas no autorizadas)
-  RD.cleanAddress = addr => String(addr || 'Calle Antonio José de Sucre Lt. 10, Chivay')
+  RD.cleanAddress = addr => String(addr || 'Calle Piérola con Garcilaso de la Vega, Chivay, Arequipa')
     .replace(/\s*\(?\s*al costado de\s+(la\s+)?discoteca\s+muya\s*\)?/gi, '')
-    .trim() || 'Calle Antonio José de Sucre Lt. 10, Chivay';
+    .trim() || 'Calle Piérola con Garcilaso de la Vega, Chivay, Arequipa';
 
   // ---------- Generador de Boletas / Tickets (Térmico 58mm/80mm y WhatsApp) ----------
   RD.waReceiptText = (r) => {
-    const cleanAddr = RD.cleanAddress(r.gym?.address || 'Calle Antonio José de Sucre Lt. 10, Chivay');
+    const cleanAddr = RD.cleanAddress(r.gym?.address || 'Calle Piérola con Garcilaso de la Vega, Chivay, Arequipa');
     return [
       `*${r.gym?.name || 'GIMNASIO RED GYM'}*`,
       `Sede: ${cleanAddr}`,
@@ -1028,7 +816,7 @@
       `*Método:* ${(r.method || 'Efectivo').toUpperCase()}${r.op_code ? ` (Op: #${r.op_code})` : ''}`,
       r.is_daily_pass ? `\n*PASE DIARIO:* Válido para reingreso hoy mostrando este comprobante o su QR en la puerta.` : '',
       `\n*Ver Comprobante Digital:* ${location.origin}/#receipt:${r.payment_id}`,
-      `\n_${r.gym?.slogan || 'Disciplina · Constancia · Resultados'}_`,
+      `\n_${r.gym?.slogan || 'Fuerza · Pasión · Resultados'}_`,
       `¡Gracias por tu preferencia!`
     ].filter(Boolean).join('\n');
   };
@@ -1045,9 +833,9 @@
           <div class="watermark-bg" style="font-size:2.4rem;color:rgba(0,0,0,0.05)">RED GYM</div>
           <div class="r-center" style="margin-bottom:4px">${RD.LOGO_SVG(42)}</div>
           <div class="r-center r-bold" style="font-size:1.15rem">${RD.esc(r.gym?.name || 'GIMNASIO RED GYM')}</div>
-          <div class="r-center r-small muted">${RD.esc(r.gym?.slogan || 'Disciplina · Constancia · Resultados')}</div>
+          <div class="r-center r-small muted">${RD.esc(r.gym?.slogan || 'Fuerza · Pasión · Resultados')}</div>
           <div class="r-center r-small">${RD.esc(cleanAddr)}</div>
-          <div class="r-center r-small">RUC: ${RD.esc(r.gym?.ruc || '10702548911')} · Cel: ${RD.esc(r.gym?.phone || '954196867')}</div>
+          <div class="r-center r-small">${r.gym?.ruc ? 'RUC: ' + RD.esc(r.gym.ruc) + ' · ' : ''}Cel: ${RD.esc(r.gym?.phone || '954196867')}</div>
           <div class="r-line">================================</div>
           <div class="r-row"><span class="r-bold">BOLETA:</span> <span class="r-bold">${RD.esc(r.receipt_no)}</span></div>
           <div class="r-row"><span>FECHA:</span> <span>${RD.fmtDateTime(r.date || new Date().toISOString())}</span></div>
@@ -1146,9 +934,9 @@
           <div class="watermark-bg" style="font-size:2.4rem;color:rgba(0,0,0,0.05)">RED GYM</div>
           <div class="r-center" style="margin-bottom:4px">${RD.LOGO_SVG(42)}</div>
           <div class="r-center r-bold" style="font-size:1.15rem">${RD.esc(settings.gym_name || 'GIMNASIO RED GYM')}</div>
-          <div class="r-center r-small muted">${RD.esc(settings.gym_slogan || 'Disciplina · Constancia · Resultados')}</div>
+          <div class="r-center r-small muted">${RD.esc(settings.gym_slogan || 'Fuerza · Pasión · Resultados')}</div>
           <div class="r-center r-small">${RD.esc(cleanAddr)}</div>
-          <div class="r-center r-small">RUC: ${RD.esc(settings.gym_ruc || '10702548911')} · Cel: ${RD.esc(settings.gym_phone || '954196867')}</div>
+          <div class="r-center r-small">${settings.gym_ruc ? 'RUC: ' + RD.esc(settings.gym_ruc) + ' · ' : ''}Cel: ${RD.esc(settings.gym_phone || '954196867')}</div>
           <div class="r-line">================================</div>
           <div class="r-center r-bold" style="font-size:1.05rem">ACTA DE CIERRE DE TURNO</div>
           <div class="r-center r-small r-bold">ARQUEO DE CAJA FÍSICA Y DIGITAL</div>

@@ -30,15 +30,15 @@ function membershipEnd(start, months, days) {
 }
 
 // ---------- QR firmado ----------
-// Física:  RD1.<codigo>.P<version>.<firma>   (fija; se anula subiendo la versión)
-// Digital: RD1.<codigo>.D<ventana60s>.<firma> (rota cada 60 s, se acepta ±1 ventana)
+// Física:  RED1.<codigo>.P<version>.<firma>   (fija; se anula subiendo la versión)
+// Digital: RED1.<codigo>.D<ventana60s>.<firma> (rota cada 60 s, se acepta ±1 ventana)
 const sign = (key, code, kind, n) =>
   crypto.createHmac('sha256', key).update(`${code}|${kind}${n}`).digest('hex').slice(0, 12);
 
-const physicalPayload = (m) => `RD1.${m.code}.P${m.phys_ver}.${sign(m.qr_key, m.code, 'P', m.phys_ver)}`;
+const physicalPayload = (m) => `RED1.${m.code}.P${m.phys_ver}.${sign(m.qr_key, m.code, 'P', m.phys_ver)}`;
 const digitalPayload = (m, nowMs = Date.now()) => {
   const n = Math.floor(nowMs / 60000);
-  return `RD1.${m.code}.D${n}.${sign(m.qr_key, m.code, 'D', n)}`;
+  return `RED1.${m.code}.D${n}.${sign(m.qr_key, m.code, 'D', n)}`;
 };
 
 // ---------- Estado de acceso ----------
@@ -117,9 +117,9 @@ function buildYapeQrPayload({ phone = '954196867', amount = 0, merchant = 'GIMNA
   return payload + crc16Ccitt(payload);
 }
 
-const dailySign = (code, day, secret = 'rd-daily-secret-2026') =>
+const dailySign = (code, day, secret = process.env.DAILY_SECRET || 'red-daily-secret-2026') =>
   crypto.createHmac('sha256', secret).update(`${code}|${day}`).digest('hex').slice(0, 12);
-const dailyPayload = (code, day) => `RD1.DAY.${code}.${day}.${dailySign(code, day)}`;
+const dailyPayload = (code, day) => `RED1.DAY.${code}.${day}.${dailySign(code, day)}`;
 
 const randomKey = () => crypto.randomBytes(16).toString('hex');
 const randomToken = () => crypto.randomBytes(24).toString('hex');

@@ -31,7 +31,7 @@
     <div class="auth">
       <form class="box" id="mlf" autocomplete="on">
         <div class="brand">
-          <img class="logo" src="/logo.svg" alt="RD" style="height:48px;width:48px;max-height:48px;max-width:48px;object-fit:contain;margin:0 auto .6rem" width="48" height="48">
+          <img class="logo" src="/logo.svg" alt="RED GYM" style="height:48px;width:48px;max-height:48px;max-width:48px;object-fit:contain;margin:0 auto .6rem" width="48" height="48">
           <h1>GIMNASIO RED GYM</h1>
           <p>Tu credencial y entrenador digital · Chivay</p>
         </div>
@@ -50,7 +50,7 @@
         <button type="button" class="btn ghost sm mt2 block" id="btn_login_install" style="display:flex;align-items:center;justify-content:center;gap:6px">${RD.icon('smartphone', '', 16)} ¿Cómo instalar la App en tu Celular o PC?</button>
         <p class="center muted tiny mt2">Este dispositivo recordará tu sesión de forma segura.</p>
         <div class="card flat mt center small muted">
-          ¿Aún no estás registrado? Acércate a recepción en Calle Sucre Lt. 10 para obtener tu código y credencial.
+          ¿Aún no estás registrado? Acércate a recepción en Calle Piérola con Garcilaso de la Vega para obtener tu código y credencial.
         </div>
         <p class="center muted tiny mt">Personal del gimnasio: <a href="/admin/">Acceso al panel</a> · <a href="#" id="loginlegal">Reglamento y Privacidad</a></p>
         <div class="center mt2">
@@ -128,7 +128,7 @@
     root.innerHTML = `
     <div>
       <header class="topbar">
-        <img src="/logo.svg" alt="RD" class="topbar-logo" style="height:32px;width:32px;max-height:32px;max-width:32px;object-fit:contain;flex-shrink:0" width="32" height="32">
+        <img src="/logo.svg" alt="RED GYM" class="topbar-logo" style="height:32px;width:32px;max-height:32px;max-width:32px;object-fit:contain;flex-shrink:0" width="32" height="32">
         <div class="t" id="apptitle">GIMNASIO RED GYM</div>
         <button class="icon-btn" id="appinstallbtn" title="Cómo instalar la App en tu móvil o PC" aria-label="Instalar App">${RD.icon('smartphone', '', 18)}</button>
         <button class="icon-btn" id="btn_member_refresh" title="Actualizar aplicación y sincronizar datos en vivo" aria-label="Actualizar">${RD.icon('refresh', '', 18)}</button>
@@ -270,7 +270,7 @@
     </div>
 
     <!-- Acceso Rápido a Entrenar Hoy -->
-    <div class="card mt mb train-hero-card" style="background:linear-gradient(135deg,rgba(183,110,121,0.15),rgba(2,132,199,0.1));border-color:var(--gold)">
+    <div class="card mt mb train-hero-card" style="background:linear-gradient(135deg,rgba(200,30,30,0.15),rgba(2,132,199,0.1));border-color:var(--gold)">
       <div class="row between mb">
         <div>
           <b style="font-size:1.05rem;display:flex;align-items:center;gap:7px">${RD.icon('train', 'gold', 20)} ¿Listo para entrenar hoy?</b>
@@ -303,7 +303,7 @@
     </div>
 
     ${('Notification' in window) && Notification.permission === 'default' && !localStorage.getItem('rd_push_prompt_dismiss') ? `
-    <div class="card mb" id="push_prompt_card" style="background:linear-gradient(135deg,rgba(245,180,0,0.14),rgba(245,180,0,0.04));border:1px solid var(--gold);padding:14px;border-radius:10px">
+    <div class="card mb" id="push_prompt_card" style="background:linear-gradient(135deg,rgba(239,68,68,0.14),rgba(239,68,68,0.04));border:1px solid var(--gold);padding:14px;border-radius:10px">
       <div class="row between wrap gap" style="align-items:center">
         <div class="grow" style="min-width:200px">
           <b style="color:var(--gold);display:flex;align-items:center;gap:6px">${RD.icon('bell-ring', '', 18)} ¿Activar Notificaciones al Celular?</b>
@@ -338,8 +338,8 @@
         <div>
           <h3 style="margin:0;display:flex;align-items:center;gap:6px">${RD.icon('map-pin', 'gold', 18)} GIMNASIO RED GYM · Sede Oficial Chivay</h3>
           <p class="muted small" style="margin:4px 0 0">
-            ${esc(RD.cleanAddress(fresh.settings?.gym_address || 'Calle Antonio José de Sucre Lt. 10, Chivay'))}.<br>
-            Horario: ${esc(fresh.settings?.opening || 'Lun a Sáb 6:00 a 21:00')} · WhatsApp: <b>${esc(fresh.settings?.gym_phone || '954 196 867')}</b>.
+            ${esc(RD.cleanAddress(fresh.settings?.gym_address || 'Calle Piérola con Garcilaso de la Vega, Chivay, Arequipa'))}.<br>
+            Horario: ${esc(fresh.settings?.opening || 'Lun a Sáb 5:30 am a 10:00 pm')} · WhatsApp: <b>${esc(fresh.settings?.gym_phone || '954 196 867')}</b>.
           </p>
         </div>
       </div>
@@ -694,7 +694,7 @@
 
       const resBox = el.querySelector('#wz_result_box');
       resBox.innerHTML = `
-        <div class="card mb" style="border:2px solid var(--gold);background:rgba(183,110,121,0.08)">
+        <div class="card mb" style="border:2px solid var(--gold);background:rgba(200,30,30,0.08)">
           <div class="badge ok mb" style="display:inline-flex;align-items:center;gap:5px">${RD.icon('check', '', 14)}<span>Plan Recomendado para Ti</span></div>
           <h2>${esc(match.name)}</h2>
           <p class="muted small">${esc(match.description || match.goal)}</p>
@@ -813,7 +813,7 @@
 
         subview.innerHTML = `
           <!-- TARJETA EJECUTIVA CON MARCA DE AGUA OFICIAL Y EXPEDIENTE IMPRIMIBLE -->
-          <div class="card mb watermark-container" style="border:1px solid var(--gold);background:linear-gradient(145deg,rgba(15,23,42,0.92),rgba(183,110,121,0.12))">
+          <div class="card mb watermark-container" style="border:1px solid var(--gold);background:linear-gradient(145deg,rgba(15,23,42,0.92),rgba(200,30,30,0.12))">
             <div class="watermark-bg">GIMNASIO RED GYM</div>
             <div class="row between wrap gap" style="position:relative;z-index:1;align-items:center">
               <div class="row gap" style="align-items:center">
@@ -912,7 +912,7 @@
 
               <!-- Diagnóstico Inteligente del Socio -->
               ${(dev.insights && dev.insights.length) ? `
-              <div class="mt2" style="background:rgba(245,180,0,0.07);border-left:3px solid var(--gold);padding:10px 12px;border-radius:0 8px 8px 0">
+              <div class="mt2" style="background:rgba(239,68,68,0.07);border-left:3px solid var(--gold);padding:10px 12px;border-radius:0 8px 8px 0">
                 <div class="tiny bold gold mb2" style="display:flex;align-items:center;gap:5px">${RD.icon('sparkles', 'gold', 14)} DIAGNÓSTICO DE RENDIMIENTO PERSONALIZADO:</div>
                 ${dev.insights.map(ins => `<div class="tiny" style="margin-bottom:4px;line-height:1.4">• ${esc(ins)}</div>`).join('')}
               </div>` : ''}
@@ -1151,8 +1151,8 @@
           <div class="logo-box">${RD.LOGO_SVG(58)}</div>
           <div class="grow">
             <h2 style="margin:0;color:var(--gold);font-weight:900;letter-spacing:1px">${esc(pub.gym_name || 'GIMNASIO RED GYM')} · SEDE CHIVAY</h2>
-            <div class="small muted">${esc(pub.gym_slogan || 'Disciplina · Constancia · Resultados · Valle del Colca')}</div>
-            <div class="tiny muted">RUC: 10702548911 · ${esc(RD.cleanAddress(pub.gym_address))} · Tel: ${esc(pub.gym_phone || '954196867')}</div>
+            <div class="small muted">${esc(pub.gym_slogan || 'Fuerza · Pasión · Resultados · Valle del Colca')}</div>
+            <div class="tiny muted">${esc(RD.cleanAddress(pub.gym_address))} · Tel: ${esc(pub.gym_phone || '954196867')}</div>
           </div>
           <div class="no-print">
             <button class="btn primary sm" id="btn_print_member_dossier">${RD.icon('printer', '', 14)} Imprimir / Guardar PDF</button>
@@ -1379,7 +1379,7 @@
             <label class="field" id="bf_hip_wrap" style="display:none"><span>Cadera (cm)</span><input id="bf_hp" type="number" value="95"></label>
           </div>
         </div>
-        <div class="card center mb" style="background:rgba(183,110,121,0.12);border-color:var(--gold)">
+        <div class="card center mb" style="background:rgba(200,30,30,0.12);border-color:var(--gold)">
           <div class="muted small">Porcentaje de Grasa Estimado</div>
           <div class="gold" id="bf_res" style="font-size:2.4rem;font-weight:900">-- %</div>
         </div>

@@ -1,9 +1,9 @@
 /* GIMNASIO RED GYM - Service Worker (funciona sin internet y actualización instantánea) */
-const VERSION = 'rg-v5.0';
+const VERSION = 'rg-v6.0';
 const SHELL = [
   '/', '/index.html', '/display.html', '/admin/', '/admin/index.html', '/admin/cards.html',
   '/css/style.css', '/js/common.js', '/js/member-hub.js', '/js/app.js', '/js/admin-core.js', '/js/admin-scan.js', '/js/admin-members.js', '/js/admin-other.js', '/js/admin-announce.js', '/js/workout.js',
-  '/vendor/qrcode.js', '/vendor/jsQR.js', '/logo.svg', '/manifest.json', '/admin/manifest.json',
+  '/vendor/qrcode.js', '/vendor/jsQR.js', '/logo.svg', '/logo.png', '/manifest.json', '/admin/manifest.json',
   '/icons/icon-192.png', '/icons/icon-512.png'
 ];
 
@@ -63,7 +63,7 @@ self.addEventListener('push', e => {
     body: d.body || '',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
-    tag: d.tag || ('rd-aviso-' + Date.now()),
+    tag: d.tag || ('rg-aviso-' + Date.now()),
     renotify: true,
     requireInteraction: false,
     silent: isSilent,
@@ -75,7 +75,7 @@ self.addEventListener('push', e => {
   try {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
       for (const client of clients) {
-        client.postMessage({ type: 'rd-new-announcement', data: d });
+        client.postMessage({ type: 'rg-new-announcement', data: d });
       }
     }).catch(() => {});
   } catch {}

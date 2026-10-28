@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#06080c" />
-<title>RD Fitness Club a Escala Real: Mostrador de Recepción ➔ Techo CCTV (+3.2m) ➔ Rack 19" ➔ Smart TV 55" PiP</title>
+<title>GIMNASIO RED GYM a Escala Real: Mostrador de Recepción ➔ Techo CCTV (+3.2m) ➔ Rack 19" ➔ Smart TV 55" PiP</title>
 </head>
 <body>
 <div id="app"></div>
@@ -2907,12 +2907,12 @@
 (function () {
   var sceneFactory = (function () { var module = { exports: {} }; var exports = module.exports;
 // Escena 3D de Escala Física, Arquitectura Espacial y Despiece Anatómico Realista (Anatomy3D v3.0)
-// RD Fitness Club (Calle Antonio José de Sucre Lt. 10, Chivay):
+// GIMNASIO RED GYM (Calle Piérola con Garcilaso de la Vega, Chivay, Arequipa):
 // Zona 1: Mostrador de Recepción y Caja (Escritorio con Monitor, Celular QR Socio, Escáner 2D Pedestal, Mini PC NUC Beelink, Impresora Térmica 80mm)
 // Zona 2: Nivel Superior de Vigilancia CCTV (+3.2m / Losa z=+28 con Cámara Domo PTZ 1080p apuntando al ingreso)
 // Zona 3: Gabinete Rack 19" de Seguridad y Red (Grabador DVR 4CH + Capturadora HDMI-USB 3.0 en 7U + Gateway Fibra Cloud Vault en 12U)
 // Zona 4: Sala Principal del Gimnasio (Muro con Smart TV 55" 4K UHD Vertical: 4 Cámaras CCTV 24/7 + Ventana PiP + Bienvenida QR/Yape + Spot Publicitario Rotativo)
-module.exports = function createRdFitnessScene() {
+module.exports = function createRedGymScene() {
   const A = typeof Anatomy3D !== 'undefined' ? Anatomy3D : require('C:/Users/cf039/.gemini/config/skills/anatomy/kit/anatomy3d/core.js');
   const env = A.env;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -2923,7 +2923,7 @@ module.exports = function createRdFitnessScene() {
   const environments = [
     env.officeRoom({
       id: 'env_reception',
-      label: 'Zona 1 • Recepción y Caja RD Fitness',
+      label: 'Zona 1 • Recepción y Caja RED GYM',
       subtitle: 'Mostrador de atención, acceso QR manos libres, Mini PC y emisión de boletas',
       at: [-176, -50],
       size: [106, 52, 26],
@@ -3001,14 +3001,14 @@ module.exports = function createRdFitnessScene() {
   const memberPhone = {
     id: 'member_phone',
     short: '1. Celular QR Socio (Mostrador)',
-    label: 'Smartphone del Socio con Carné Digital QR (o Tarjeta PVC RD Fitness)',
+    label: 'Smartphone del Socio con Carné Digital QR (o Tarjeta PVC RED GYM)',
     category: 'sensor_iot',
     placement: 'desk',
     zone: 'env_reception',
     location: 'Mostrador de Recepción • Zona de Ingreso de Socios (z = +10)',
     realSize: '7.6 × 15.8 × 0.8 cm (Smartphone OLED / Carné PVC)',
     lift: 14,
-    desc: 'Teléfono del socio presentado frente al lector en la esquina de acceso del mostrador de recepción (z = +10). Sus dimensiones físicas reales (7.6 × 15.8 cm) son las más compactas de la escena, mostrando en pantalla el Carné Digital con código QR y sello de agua de RD Fitness Club.',
+    desc: 'Teléfono del socio presentado frente al lector en la esquina de acceso del mostrador de recepción (z = +10). Sus dimensiones físicas reales (7.6 × 15.8 cm) son las más compactas de la escena, mostrando en pantalla el Carné Digital con código QR y sello de agua de GIMNASIO RED GYM.',
     specs: {
       'Ubicación Física': 'Mostrador Recepción • Esquina Acceso (z = +10)',
       'Dimensiones Reales': '7.6 × 15.8 × 0.8 cm (Escala 1:1)',
@@ -3026,14 +3026,14 @@ module.exports = function createRdFitnessScene() {
     ],
     ports: [],
     internals: [
-      { id: 'ph_pcb', label: 'Placa Lógica Smartphone ARM64', desc: 'Ejecuta la PWA de RD Fitness Club con estadísticas, rutinas y carné QR.', type: 'box', min: [-160.0, -34.5, 11.2], size: [1.1, 3.5, 8.2], m: 'pcb' },
+      { id: 'ph_pcb', label: 'Placa Lógica Smartphone ARM64', desc: 'Ejecuta la PWA de GIMNASIO RED GYM con estadísticas, rutinas y carné QR.', type: 'box', min: [-160.0, -34.5, 11.2], size: [1.1, 3.5, 8.2], m: 'pcb' },
       { id: 'ph_oled', label: 'Controlador Display AMOLED & Brillo', desc: 'Renderiza el vector SVG del código QR con bordes nítidos (`crispEdges`).', type: 'box', min: [-158.5, -34.4, 17.2], size: [3.4, 1.6, 2.2], m: 'ledC' },
       { id: 'ph_qr_tok', label: 'Motor de Token QR (`RDFIT:Mxxxx`)', desc: 'Genera la credencial única vinculada al DNI y vigencia del socio.', type: 'box', min: [-158.5, -32.4, 17.2], size: [3.4, 1.6, 2.2], m: 'gold' },
       { id: 'ph_pwa', label: 'Caché Offline Service Worker (`rd-v4.3`)', desc: 'Permite abrir el carné QR en la puerta del gimnasio incluso sin señal móvil.', type: 'box', min: [-158.5, -34.4, 14.3], size: [3.4, 3.5, 2.2], m: 'pcbblue' },
       { id: 'ph_batt', label: 'Batería Polímero de Litio 5000 mAh', desc: 'Suministro energético regulado del teléfono.', type: 'box', min: [-158.5, -34.4, 11.3], size: [3.4, 3.5, 2.4], m: 'chip' },
     ],
     pipeline: [
-      { id: 'ph_s1', comp: 'ph_pwa', name: '1. Apertura Instantánea del Carné PWA', desc: 'El socio abre su carné digital de RD Fitness Club (con o sin internet).' },
+      { id: 'ph_s1', comp: 'ph_pwa', name: '1. Apertura Instantánea del Carné PWA', desc: 'El socio abre su carné digital de GIMNASIO RED GYM (con o sin internet).' },
       { id: 'ph_s2', comp: 'ph_qr_tok', name: '2. Despliegue de Código QR Oficial', desc: 'Se muestra el código QR de alto contraste con marca de agua del gimnasio.' },
       { id: 'ph_s3', comp: 'ph_oled', name: '3. Presentación frente al Escáner 2D', desc: 'El socio acerca su pantalla a 10 cm del lector manos libres sobre el mostrador.' },
     ],
@@ -3318,7 +3318,7 @@ module.exports = function createRdFitnessScene() {
       { name: 'Divisor Horizontal Mosaico CCTV', type: 'box', min: [41.0, 11.45, 28.7], size: [54.0, 0.15, 0.6], m: 'dark', nest: 'tv_sh' },
       { name: 'Divisor Vertical Mosaico CCTV', type: 'box', min: [67.7, 11.45, 16.0], size: [0.6, 0.15, 26.0], m: 'dark', nest: 'tv_sh' },
       // Superposición Central Prioritaria (Bienvenida Socio QR / Cobro Yape / Spot Publicitario)
-      { name: 'Tarjeta Central: Bienvenida QR / Yape / Spot RD Fitness', type: 'box', min: [50.0, 11.3, 21.5], size: [30.0, 0.25, 15.0], m: 'gold', nest: 'tv_sh' },
+      { name: 'Tarjeta Central: Bienvenida QR / Yape / Spot RED GYM', type: 'box', min: [50.0, 11.3, 21.5], size: [30.0, 0.25, 15.0], m: 'gold', nest: 'tv_sh' },
       { name: 'Banner Superior Verde ACCESO CONCEDIDO • 24 DÍAS', type: 'box', min: [52.5, 11.15, 33.2], size: [25.0, 0.2, 2.2], m: 'ledG', nest: 'tv_sh' },
       // Ventana Picture-in-Picture (PiP) en la esquina inferior derecha
       { name: 'Recuadro Picture-in-Picture (PiP 4 Cámaras en Esquina)', type: 'box', min: [80.5, 11.2, 17.0], size: [13.5, 0.3, 7.8], m: 'ledC', nest: 'tv_sh' },
@@ -3341,7 +3341,7 @@ module.exports = function createRdFitnessScene() {
       { id: 'tv_s1', comp: 'tv_panel', name: '1. Estado Base (90%): 4 Cámaras CCTV a Pantalla Completa', desc: 'Muestra en vivo las 4 cámaras de seguridad del gimnasio a pantalla completa.' },
       { id: 'tv_s2', comp: 'tv_pip', name: '2. Reducción Automática de Cámaras a Esquina PiP', desc: 'Cuando ocurre un evento importante o toca publicidad, las cámaras pasan a la ventana PiP.' },
       { id: 'tv_s3', comp: 'tv_switcher', name: '3. Proyección Prioritaria: Bienvenida QR / Cobro Yape (5.5s)', desc: 'Despliega los datos del socio o el código QR de Yape/Plin con sonido y luego restaura las cámaras.' },
-      { id: 'tv_s4', comp: 'tv_rotator', name: '4. Spot Publicitario Programado (16s cada 3 min)', desc: 'Anuncia los planes y promociones de RD Fitness Club manteniendo las cámaras visibles en PiP.' },
+      { id: 'tv_s4', comp: 'tv_rotator', name: '4. Spot Publicitario Programado (16s cada 3 min)', desc: 'Anuncia los planes y promociones de GIMNASIO RED GYM manteniendo las cámaras visibles en PiP.' },
     ],
   };
 
@@ -3378,7 +3378,7 @@ module.exports = function createRdFitnessScene() {
     ],
     internals: [
       { id: 'cl_pcb', label: 'Placa Base Gateway & Motor TLS 1.3', desc: 'Cifra los paquetes JSON hacia la nube con reconexión automática.', type: 'box', min: [-52.2, 12.8, 22.4], size: [14.4, 9.4, 0.5], m: 'pcb' },
-      { id: 'cl_redis', label: 'Cliente Upstash Redis (`rd_fitness:vault:v4`)', desc: 'Sincroniza atómicamente el estado completo del gimnasio en la nube.', type: 'box', min: [-51.8, 13.2, 23.1], size: [4.4, 4.2, 2.0], m: 'ledG' },
+      { id: 'cl_redis', label: 'Cliente Upstash Redis (`red_gym_vault`)', desc: 'Sincroniza atómicamente el estado completo del gimnasio en la nube.', type: 'box', min: [-51.8, 13.2, 23.1], size: [4.4, 4.2, 2.0], m: 'ledG' },
       { id: 'cl_sync', label: 'Cola Resiliente Offline-First', desc: 'Guarda los cambios si se cae el internet en Chivay y los sube al reconectar.', type: 'box', min: [-46.8, 13.2, 23.1], size: [4.4, 4.2, 2.0], m: 'copper' },
       { id: 'cl_sheets', label: 'Conector Google Sheets & Exportador Excel', desc: 'Actualiza la hoja de cálculo en línea y respalda los reportes gerenciales.', type: 'box', min: [-51.8, 18.0, 23.1], size: [6.8, 3.6, 1.8], m: 'pcbblue' },
       { id: 'cl_wsp', label: 'Pasarela de Boletas y Avisos WhatsApp', desc: 'Permite enviar comprobantes y alertas de vencimiento al celular del socio.', type: 'box', min: [-41.8, 13.2, 23.1], size: [3.6, 8.4, 2.0], m: 'gold' },
@@ -3530,14 +3530,14 @@ module.exports = function createRdFitnessScene() {
         { type: 'cable', cable: 'c_dvr_pc', dir: 1, layer: 'Stream USB 3.0 UVC 1080p60', dur: 1.4, text: 'El flujo de las 4 cámaras llega a la Mini PC para integrarse en `/display.html`.' },
         { type: 'inside', dev: 'dvr_capture', stages: ['dv_s2'], exit: 'hdmi_tv_out', layer: 'Bus HDMI Directo CCTV', dur: 1.8, text: 'Canal HDMI directo de respaldo hacia la pantalla principal.' },
         { type: 'cable', cable: 'c_dvr_tv', dir: 1, layer: 'Enlace HDMI a Muro Principal', dur: 1.3, text: 'Transmisión continua hacia la Smart TV de 55 pulgadas.' },
-        { type: 'inside', dev: 'smart_tv_55', enter: 'hdmi_from_dvr', stages: ['tv_s1', 'tv_s2', 'tv_s4'], layer: 'Spot Publicitario 16s + CCTV PiP', dur: 3.4, text: 'Cada 3 minutos la Smart TV proyecta durante 16 segundos el Spot Publicitario de RD Fitness Club (manteniendo las cámaras en la esquina PiP) y luego regresa a las 4 cámaras a pantalla completa.' },
+        { type: 'inside', dev: 'smart_tv_55', enter: 'hdmi_from_dvr', stages: ['tv_s1', 'tv_s2', 'tv_s4'], layer: 'Spot Publicitario 16s + CCTV PiP', dur: 3.4, text: 'Cada 3 minutos la Smart TV proyecta durante 16 segundos el Spot Publicitario de GIMNASIO RED GYM (manteniendo las cámaras en la esquina PiP) y luego regresa a las 4 cámaras a pantalla completa.' },
       ],
     },
   ];
 
   return {
-    fig: 'FIG 01 • ARQUITECTURA FÍSICA, ESPACIAL Y ANATÓMICA 3D A ESCALA REAL • RD FITNESS CLUB (v3.0)',
-    title: 'RD Fitness Club a Escala Real: Mostrador de Recepción ➔ Techo CCTV (+3.2m) ➔ Rack 19" ➔ Smart TV 55" PiP',
+    fig: 'FIG 01 • ARQUITECTURA FÍSICA, ESPACIAL Y ANATÓMICA 3D A ESCALA REAL • GIMNASIO RED GYM (v3.0)',
+    title: 'GIMNASIO RED GYM a Escala Real: Mostrador de Recepción ➔ Techo CCTV (+3.2m) ➔ Rack 19" ➔ Smart TV 55" PiP',
     subtitle: 'Simulador Espacial y Anatómico 3D v3.0 • Ambientes Reales, Proporción Física Exacta, Boletas #000 y Smart TV con Cámaras + Publicidad Rotativa',
     hint: 'ARRASTRA PARA ORBITAR 3D • RUEDA PARA ZOOM ANATÓMICO • BOTÓN "🏢 ENTORNO" MUESTRA/OCULTA OFICINAS, ESCRITORIO Y RACK 19"',
     worldSpan: 340,

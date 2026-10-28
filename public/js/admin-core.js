@@ -152,7 +152,7 @@
     const p = RD.pub;
     root.innerHTML = `
     <div class="auth"><form class="box" id="lf" autocomplete="on">
-      <div class="brand"><img class="logo" src="/logo.svg" alt="RD"><h1>${esc(p.gym_name || 'GIMNASIO RED GYM')}</h1><p>Panel de gestión</p></div>
+      <div class="brand"><img class="logo" src="/logo.svg" alt="RED GYM"><h1>${esc(p.gym_name || 'GIMNASIO RED GYM')}</h1><p>Panel de gestión</p></div>
       ${msg ? `<div class="banner err">${esc(msg)}</div>` : ''}
       <label class="field"><span>Usuario</span><input name="u" autocomplete="username" autocapitalize="none" required autofocus></label>
       <label class="field"><span>Contraseña</span><input name="p" type="password" autocomplete="current-password" required></label>
@@ -207,7 +207,7 @@
     const w = 1024, h = 600;
     const left = window.screen.availWidth ? Math.max(0, window.screen.availWidth - w - 20) : 50;
     const top = 50;
-    const win = window.open('/display.html', 'RD_CustomerDisplay', `width=${w},height=${h},top=${top},left=${left},resizable=yes,scrollbars=no,status=no`);
+    const win = window.open('/display.html', 'RG_CustomerDisplay', `width=${w},height=${h},top=${top},left=${left},resizable=yes,scrollbars=no,status=no`);
     if (win) {
       win.focus();
       RD.toast('Pantalla Tablet / Mostrador acoplada');
@@ -463,7 +463,7 @@ pause`;
     root.innerHTML = `
     <div class="admin">
       <header class="topbar">
-        <img src="/logo.svg" alt="RD" class="topbar-logo" style="height:32px;width:32px;max-height:32px;max-width:32px;object-fit:contain;flex-shrink:0" width="32" height="32">
+        <img src="/logo.svg" alt="RED GYM" class="topbar-logo" style="height:32px;width:32px;max-height:32px;max-width:32px;object-fit:contain;flex-shrink:0" width="32" height="32">
         <div class="t" id="title">${esc(RD.pub.gym_name || 'GIMNASIO RED GYM')}</div>
         <span id="net" class="net">…</span>
         <button class="top-btn" id="btn_local_mode" title="Centro de Control de Modo Local y Contingencia en PC del Dueño">
@@ -628,7 +628,7 @@ pause`;
     RD.registerSW();
     RD.syncTime();
     try { RD.pub = await (await fetch('/api/public')).json(); localStorage.setItem('rd_public', JSON.stringify(RD.pub)); } catch { }
-    document.documentElement.style.setProperty('--gold', RD.pub.color || '#f5b400');
+    document.documentElement.style.setProperty('--gold', RD.pub.color || '#ef4444');
     const authed = await ensureStaffAuth();
     if (!authed) return showLogin();
     layout();

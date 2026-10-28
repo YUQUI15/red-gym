@@ -1,4 +1,4 @@
-// Biblioteca de ejercicios RD Fitness Club (contenido en español).
+// Biblioteca de ejercicios GIMNASIO RED GYM (contenido en español).
 // Las imágenes (posición inicial y final) provienen de free-exercise-db (dominio público).
 // Cada ejercicio: id (de la base de imágenes), nombre, grupo, tipo, equipo, nivel, músculos, efecto real,
 // pasos detallados, errores comunes, consejo de respiración/seguridad y variante.

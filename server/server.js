@@ -35,7 +35,7 @@ const bad = (res, msg, code = 400) => res.status(code).json({ error: msg });
 const num = (v, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
 const audit = (uid, action, detail) => q.run('INSERT INTO audit(user_id,action,detail) VALUES(?,?,?)', uid || null, action, typeof detail === 'string' ? detail : JSON.stringify(detail));
 const J = s => { try { return JSON.parse(s); } catch { return []; } };
-const memberCode = id => 'RD-' + String(id).padStart(4, '0');
+const memberCode = id => 'RG-' + String(id).padStart(4, '0');
 const METHODS = ['efectivo', 'yape', 'plin', 'tarjeta', 'transferencia'];
 const isSecure = req => req.secure || String(req.headers['x-forwarded-proto'] || '').split(',')[0] === 'https';
 
@@ -68,8 +68,8 @@ function loadSession(req) {
       if (i > 0) {
         const k = part.slice(0, i).trim();
         const v = decodeURIComponent(part.slice(i + 1).trim());
-        if (k === 'rd_s' && !token) token = v;
-        else if (k === 'rd_m' && !token) token = v;
+        if (k === 'rg_s' && !token) token = v;
+        else if (k === 'rg_m' && !token) token = v;
       }
     }
   }
@@ -246,7 +246,7 @@ api.post('/auth/login', wrap((req, res) => {
   const ua = String(req.headers['user-agent'] || '').slice(0, 300);
   q.run("INSERT INTO sessions(token,kind,ref_id,last_seen,ua) VALUES(?,?,?,datetime('now'),?)", token, 'staff', u.id, ua);
   const sec = isSecure(req);
-  res.setHeader('Set-Cookie', `rd_s=${token}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax${sec ? '; Secure' : ''}`);
+  res.setHeader('Set-Cookie', `rg_s=${token}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax${sec ? '; Secure' : ''}`);
   res.json({ token, user: { id: u.id, username: u.username, name: u.name, role: u.role, must_change: u.must_change } });
 }));
 
@@ -254,16 +254,16 @@ api.post('/auth/login', wrap((req, res) => {
 api.post('/auth/staff-resume', wrap((req, res) => {
   const s = loadSession(req);
   if (!s || s.kind !== 'staff') {
-    res.setHeader('Set-Cookie', 'rd_s=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
+    res.setHeader('Set-Cookie', 'rg_s=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
     return bad(res, 'Sin sesión de personal', 401);
   }
   const u = q.get('SELECT id,username,name,role,active,must_change FROM users WHERE id=?', s.ref_id);
   if (!u || !u.active) {
-    res.setHeader('Set-Cookie', 'rd_s=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
+    res.setHeader('Set-Cookie', 'rg_s=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
     return bad(res, 'Usuario inactivo', 401);
   }
   const sec = isSecure(req);
-  res.setHeader('Set-Cookie', `rd_s=${s.token}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax${sec ? '; Secure' : ''}`);
+  res.setHeader('Set-Cookie', `rg_s=${s.token}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax${sec ? '; Secure' : ''}`);
   res.json({ token: s.token, user: { id: u.id, username: u.username, name: u.name, role: u.role, must_change: u.must_change } });
 }));
 
@@ -272,8 +272,8 @@ api.post('/auth/staff-resume', wrap((req, res) => {
 api.post('/auth/logout', wrap((req, res) => {
   const s = loadSession(req); if (s) q.run('DELETE FROM sessions WHERE token=?', s.token);
   res.setHeader('Set-Cookie', [
-    'rd_s=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax',
-    'rd_m=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax'
+    'rg_s=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax',
+    'rg_m=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax'
   ]);
   res.json({ ok: true });
 }));
@@ -363,10 +363,10 @@ function buildReceipt(paymentId) {
     date: p.created_at,
     gym: {
       name: cfg.gym_name || 'GIMNASIO RED GYM',
-      slogan: cfg.gym_slogan || 'Disciplina · Constancia · Resultados',
-      address: cfg.gym_address || 'Calle Antonio José de Sucre Lt. 10, Chivay',
+      slogan: cfg.gym_slogan || 'Fuerza · Pasión · Resultados',
+      address: cfg.gym_address || 'Calle Piérola con Garcilaso de la Vega, Chivay, Arequipa',
       phone: cfg.gym_phone || '954196867',
-      ruc: cfg.gym_ruc || '10702548911'
+      ruc: cfg.gym_ruc || ''
     },
     client: {
       name: clientName,
@@ -658,13 +658,13 @@ api.get('/cards', staff('admin', 'recepcion'), wrap((req, res) => {
 function parseScanInput(raw) {
   const text = String(raw || '').trim();
   if (!text) return null;
-  const m = /^RD1\.(RD-\d{1,8})\.([PD])(\d+)\.([0-9a-f]{12})$/.exec(text);
+  const m = /^(?:RED1|RED1)\.((?:RG|RD)-\d{1,8})\.([PD])(\d+)\.([0-9a-f]{12})$/.exec(text);
   if (m) return { type: 'member', code: m[1], kind: m[2], n: Number(m[3]), sig: m[4] };
-  const d = /^RD1\.DAY\.(RD-DAY-[A-Za-z0-9\-]+)\.(\d{4}-\d{2}-\d{2})\.([0-9a-f]{12})$/.exec(text);
+  const d = /^(?:RED1|RED1)\.DAY\.((?:RG|RD)-DAY-[A-Za-z0-9\-]+)\.(\d{4}-\d{2}-\d{2})\.([0-9a-f]{12})$/.exec(text);
   if (d) return { type: 'daily', code: d[1], day: d[2], sig: d[3] };
-  if (/^RD-DAY-[A-Za-z0-9\-]+$/i.test(text)) return { type: 'daily_code', code: text.toUpperCase() };
-  const mc = /^(RD-?\d{1,8})$/i.exec(text);
-  if (mc) return { type: 'member_code', code: mc[1].toUpperCase().replace(/^RD(?=\d)/, 'RD-') };
+  if (/^(?:RG|RD)-DAY-[A-Za-z0-9\-]+$/i.test(text)) return { type: 'daily_code', code: text.toUpperCase() };
+  const mc = /^((?:RG|RD)-?\d{1,8})$/i.exec(text);
+  if (mc) return { type: 'member_code', code: mc[1].toUpperCase().replace(/^(?:RG|RD)-?(?=\d)/i, 'RG-') };
   return { type: 'code', code: text };
 }
 
@@ -747,7 +747,7 @@ api.post('/attendance/scan', staff('admin', 'recepcion'), wrap((req, res) => {
   }
 
   // 2. PASE DIARIO
-  if (parsed.type === 'daily' || parsed.type === 'daily_code' || String(parsed.code).startsWith('RD-DAY-')) {
+  if (parsed.type === 'daily' || parsed.type === 'daily_code' || String(parsed.code).startsWith('RG-DAY-') || String(parsed.code).startsWith('RD-DAY-')) {
     const passCode = parsed.code.toUpperCase();
     let dp = q.get('SELECT * FROM daily_passes WHERE code=?', passCode);
     if (!dp) {
@@ -758,7 +758,7 @@ api.post('/attendance/scan', staff('admin', 'recepcion'), wrap((req, res) => {
         mode: 'denied',
         name: dp ? dp.name : 'Visitante Casual',
         code: passCode,
-        reason: dp ? `Pase diario vencido (era del ${dp.day}). Debe abonar un nuevo pase de S/ 5.` : 'Pase diario no registrado hoy. Debe abonar S/ 5.',
+        reason: dp ? `Pase diario vencido (era del ${dp.day}). Debe abonar un nuevo pase diario.` : 'Pase diario no registrado hoy. Debe abonar un pase diario.',
         level: 'denied',
         is_daily: true
       }, 6500);
@@ -767,7 +767,7 @@ api.post('/attendance/scan', staff('admin', 'recepcion'), wrap((req, res) => {
         is_daily: true,
         code: passCode,
         name: dp ? dp.name : 'Visitante (Pase anterior)',
-        reason: dp ? `Pase diario vencido (era válido el ${dp.day}). Debe abonar un nuevo pase de S/ 5.` : 'Pase diario no válido para hoy.'
+        reason: dp ? `Pase diario vencido (era válido el ${dp.day}). Debe abonar un nuevo pase diario.` : 'Pase diario no válido para hoy.'
       });
     }
 
@@ -1212,7 +1212,7 @@ api.post('/daily-passes', staff('admin', 'recepcion'), wrap((req, res) => {
   const name = String(b.name || 'Visitante casual').trim().replace(/\s+/g, ' ');
   const dni = String(b.dni || '').trim() || null;
   const phone = String(b.phone || '').trim() || null;
-  const price = num(b.price, cfg.daily_pass_price || 5);
+  const price = num(b.price, cfg.daily_pass_price || 6);
   const method = checkMethod(b.method) || 'efectivo';
   const op_code = b.op_code ? String(b.op_code).trim() : null;
   const voucher_img = b.voucher_img || null;
@@ -1250,7 +1250,7 @@ api.post('/daily-passes', staff('admin', 'recepcion'), wrap((req, res) => {
 api.post('/daily-passes/scan', staff('admin', 'recepcion'), wrap((req, res) => {
   let { code } = req.body || {};
   code = String(code || '').trim();
-  const match = /^RD1\.DAY\.([A-Za-z0-9\-]+)\.(\d{4}-\d{2}-\d{2})\.([0-9a-f]{12})$/.exec(code);
+  const match = /^(?:RED1|RED1)\.DAY\.([A-Za-z0-9\-]+)\.(\d{4}-\d{2}-\d{2})\.([0-9a-f]{12})$/.exec(code);
   let passCode = match ? match[1] : code;
   const today = L.limaDay();
   const pass = q.get('SELECT * FROM daily_passes WHERE code=?', passCode);
@@ -1673,7 +1673,7 @@ api.get('/reports/export/excel', staff('admin', 'recepcion'), wrap(async (req, r
   const settings = getSettings();
   const ds = buildDataset({ from, to, q, settings });
   const buf = await buildXlsx(ds, { publicDir: path.join(__dirname, '..', 'public') });
-  const filename = `Reporte_RD_Fitness_${from}_al_${to}.xlsx`;
+  const filename = `Reporte_RED_GYM_${from}_al_${to}.xlsx`;
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.send(buf);
@@ -1725,7 +1725,7 @@ api.get('/reports/live-feed.csv', wrap((req, res) => {
   const csv = tableToCsv(table, req.query.sep || ',');
 
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `inline; filename="rd_fitness_${tableKey}_${today}.csv"`);
+  res.setHeader('Content-Disposition', `inline; filename="red_gym_${tableKey}_${today}.csv"`);
   res.send(csv);
 }));
 
@@ -2542,8 +2542,12 @@ async function start() {
   setInterval(checkpoint, 5 * 60 * 1000).unref();
   setInterval(saveVault, 2 * 60 * 1000).unref();
   setInterval(backup, 6 * 3600 * 1000).unref();
-  process.on('SIGINT', () => { checkpoint(); saveVault(); process.exit(0); });
-  process.on('SIGTERM', () => { checkpoint(); saveVault(); process.exit(0); });
+  const gracefulShutdown = async () => {
+    try { checkpoint(); saveVault(); await CloudVault.flush(6000); } catch {}
+    process.exit(0);
+  };
+  process.on('SIGINT', gracefulShutdown);
+  process.on('SIGTERM', gracefulShutdown);
   process.on('uncaughtException', err => {
     console.error('[ANTI-CRASH] Excepción no capturada interceptada:', err?.stack || err);
     try { checkpoint(); saveVault(); } catch {}
@@ -2560,7 +2564,7 @@ async function start() {
     const keyF = path.join(DATA_DIR, 'tls.key'), crtF = path.join(DATA_DIR, 'tls.crt');
     if (!fs.existsSync(keyF)) {
       const alt = [{ type: 2, value: 'localhost' }, ...ips.map(ip => ({ type: 7, ip }))];
-      const pems = selfsigned.generate([{ name: 'commonName', value: 'rd-fitness' }], { days: 3650, keySize: 2048, extensions: [{ name: 'subjectAltName', altNames: alt }] });
+      const pems = selfsigned.generate([{ name: 'commonName', value: 'red-gym' }], { days: 3650, keySize: 2048, extensions: [{ name: 'subjectAltName', altNames: alt }] });
       fs.writeFileSync(keyF, pems.private); fs.writeFileSync(crtF, pems.cert);
     }
     https.createServer({ key: fs.readFileSync(keyF), cert: fs.readFileSync(crtF) }, app).listen(PORT, '0.0.0.0', () => {

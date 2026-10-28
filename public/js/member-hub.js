@@ -285,7 +285,7 @@
   };
   // Sincronización ágil en tiempo real: al abrir, cada 4s mientras está visible, mensajes del Service Worker y al volver al foco
   const onSwMsg = e => {
-    if (e.data && e.data.type === 'rd-new-announcement') {
+    if (e.data && e.data.type === 'rg-new-announcement') {
       H.refresh();
     }
   };

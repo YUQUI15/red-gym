@@ -4,7 +4,7 @@
 // Zona 2: Nivel Superior de Vigilancia CCTV (+3.2m / Losa z=+28 con Cámara Domo PTZ 1080p apuntando al ingreso)
 // Zona 3: Gabinete Rack 19" de Seguridad y Red (Grabador DVR 4CH + Capturadora HDMI-USB 3.0 en 7U + Gateway Fibra Cloud Vault en 12U)
 // Zona 4: Sala Principal del Gimnasio (Muro con Smart TV 55" 4K UHD Vertical: 4 Cámaras CCTV 24/7 + Ventana PiP + Bienvenida QR/Yape + Spot Publicitario Rotativo)
-module.exports = function createRdFitnessScene() {
+module.exports = function createRedGymScene() {
   const A = typeof Anatomy3D !== 'undefined' ? Anatomy3D : require('C:/Users/cf039/.gemini/config/skills/anatomy/kit/anatomy3d/core.js');
   const env = A.env;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));

@@ -1,7 +1,7 @@
 {
-  "title": "RD Fitness Club a Escala Real: Mostrador de Recepción ➔ Techo CCTV (+3.2m) ➔ Rack 19\" ➔ Smart TV 55\" PiP",
+  "title": "GIMNASIO RED GYM a Escala Real: Mostrador de Recepción ➔ Techo CCTV (+3.2m) ➔ Rack 19\" ➔ Smart TV 55\" PiP",
   "subtitle": "Simulador Espacial y Anatómico 3D v3.0 • Ambientes Reales, Proporción Física Exacta, Boletas #000 y Smart TV con Cámaras + Publicidad Rotativa",
-  "fig": "FIG 01 • ARQUITECTURA FÍSICA, ESPACIAL Y ANATÓMICA 3D A ESCALA REAL • RD FITNESS CLUB (v3.0)",
+  "fig": "FIG 01 • ARQUITECTURA FÍSICA, ESPACIAL Y ANATÓMICA 3D A ESCALA REAL • GIMNASIO RED GYM (v3.0)",
   "generated": "2026-10-20T22:06:58.609Z",
   "stats": {
     "items": 243,
@@ -70,9 +70,9 @@
     {
       "n": 1,
       "id": "member_phone",
-      "label": "Smartphone del Socio con Carné Digital QR (o Tarjeta PVC RD Fitness)",
+      "label": "Smartphone del Socio con Carné Digital QR (o Tarjeta PVC RED GYM)",
       "short": "1. Celular QR Socio (Mostrador)",
-      "desc": "Teléfono del socio presentado frente al lector en la esquina de acceso del mostrador de recepción (z = +10). Sus dimensiones físicas reales (7.6 × 15.8 cm) son las más compactas de la escena, mostrando en pantalla el Carné Digital con código QR y sello de agua de RD Fitness Club.",
+      "desc": "Teléfono del socio presentado frente al lector en la esquina de acceso del mostrador de recepción (z = +10). Sus dimensiones físicas reales (7.6 × 15.8 cm) son las más compactas de la escena, mostrando en pantalla el Carné Digital con código QR y sello de agua de GIMNASIO RED GYM.",
       "location": "Mostrador de Recepción • Zona de Ingreso de Socios (z = +10)",
       "realSize": "7.6 × 15.8 × 0.8 cm (Smartphone OLED / Carné PVC)",
       "category": "sensor_iot",
@@ -87,7 +87,7 @@
         {
           "id": "ph_pcb",
           "label": "Placa Lógica Smartphone ARM64",
-          "desc": "Ejecuta la PWA de RD Fitness Club con estadísticas, rutinas y carné QR."
+          "desc": "Ejecuta la PWA de GIMNASIO RED GYM con estadísticas, rutinas y carné QR."
         },
         {
           "id": "ph_oled",
@@ -115,7 +115,7 @@
           "n": 1,
           "id": "ph_s1",
           "name": "1. Apertura Instantánea del Carné PWA",
-          "desc": "El socio abre su carné digital de RD Fitness Club (con o sin internet).",
+          "desc": "El socio abre su carné digital de GIMNASIO RED GYM (con o sin internet).",
           "component": "ph_pwa"
         },
         {
@@ -655,7 +655,7 @@
           "n": 4,
           "id": "tv_s4",
           "name": "4. Spot Publicitario Programado (16s cada 3 min)",
-          "desc": "Anuncia los planes y promociones de RD Fitness Club manteniendo las cámaras visibles en PiP.",
+          "desc": "Anuncia los planes y promociones de GIMNASIO RED GYM manteniendo las cámaras visibles en PiP.",
           "component": "tv_rotator"
         }
       ],
@@ -700,7 +700,7 @@
         },
         {
           "id": "cl_redis",
-          "label": "Cliente Upstash Redis (`rd_fitness:vault:v4`)",
+          "label": "Cliente Upstash Redis (`red_gym_vault`)",
           "desc": "Sincroniza atómicamente el estado completo del gimnasio en la nube."
         },
         {
@@ -989,7 +989,7 @@
           "type": "inside",
           "where": "smart_tv_55",
           "layer": "Spot Publicitario 16s + CCTV PiP",
-          "text": "Cada 3 minutos la Smart TV proyecta durante 16 segundos el Spot Publicitario de RD Fitness Club (manteniendo las cámaras en la esquina PiP) y luego regresa a las 4 cámaras a pantalla completa.",
+          "text": "Cada 3 minutos la Smart TV proyecta durante 16 segundos el Spot Publicitario de GIMNASIO RED GYM (manteniendo las cámaras en la esquina PiP) y luego regresa a las 4 cámaras a pantalla completa.",
           "seconds": 3.4
         }
       ]

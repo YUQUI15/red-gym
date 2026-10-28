@@ -46,7 +46,7 @@
       }
     }
 
-    // 1. CASO: PASE DIARIO (Visitante que paga S/ 5 hoy)
+    // 1. CASO: PASE DIARIO (Visitante que paga hoy)
     if (p.type === 'daily' || p.type === 'daily_code') {
       const today = RD.limaDay();
       if (p.day && p.day !== today) {
@@ -55,7 +55,7 @@
           is_daily: true,
           code: p.code,
           name: 'Visitante (Pase anterior)',
-          reason: `Pase diario vencido (era válido el ${RD.fmtDate(p.day)}). Debe abonar un nuevo pase diario de S/ 5.`
+          reason: `Pase diario vencido (era válido el ${RD.fmtDate(p.day)}). Debe abonar un nuevo pase diario.`
         };
       }
       let dp = (snap.dailyPasses || []).find(x => x.code === p.code);
@@ -398,10 +398,17 @@
     };
   }
 
-  // ---------- Diálogo de Pase Diario (1-clic para visitantes casuales de S/ 5) ----------
+  // ---------- Diálogo de Pase Diario (1-clic para visitantes casuales) ----------
   function dailyPassDialog(onDone) {
     const cfg = RD.snap()?.cfg || {};
-    const price = cfg.daily_pass_price || 5;
+    // Tipos de pase diario = planes de 1 día activos (Red Gym: Musculación S/ 6 y Boxeo / Baile S/ 8)
+    let passTypes = [];
+    try {
+      passTypes = JSON.parse(localStorage.getItem('rd_plans') || '[]')
+        .filter(p => p.active && p.days > 0 && !p.months)
+        .map(p => ({ label: String(p.name).replace(/^Pase diario\s*/i, '').replace(/^\(|\)$/g, '') || 'General', price: p.price }));
+    } catch { passTypes = []; }
+    const price = passTypes[0]?.price ?? (cfg.daily_pass_price || 6);
 
     const d = RD.openModal(`${RD.icon('ticket')} Pase Diario (Visitante)`, `
       <form id="dpf">
@@ -413,6 +420,9 @@
           <label class="field"><span>DNI (opcional)</span><input name="dni" inputmode="numeric" placeholder="8 dígitos" autocomplete="off"></label>
           <label class="field"><span>Celular (WhatsApp comprobante)</span><input name="phone" inputmode="tel" placeholder="9XXXXXXXX" autocomplete="off"></label>
         </div>
+        ${passTypes.length > 1 ? `<label class="field"><span>Tipo de pase *</span>
+            <select id="dp_type">${passTypes.map(t => `<option value="${t.price}">${esc(t.label)} · S/ ${t.price}</option>`).join('')}</select>
+          </label>` : ''}
         <div class="grid g2 keep">
           <label class="field"><span>Monto (S/) *</span><input name="price" type="number" step="0.5" value="${price}" required></label>
           <label class="field"><span>Método de pago *</span>
@@ -446,6 +456,8 @@
     const bTot = d.el.querySelector('#dpbtntot');
 
     pInp.oninput = () => bTot.textContent = pInp.value || '0';
+    const typeSel = d.el.querySelector('#dp_type');
+    if (typeSel) typeSel.onchange = () => { pInp.value = typeSel.value; bTot.textContent = typeSel.value; };
 
     function updatePassMethod(meth) {
       if (meth === 'yape' || meth === 'plin') {
@@ -551,7 +563,7 @@
           <span class="chip" data-sm="out">${RD.icon('door')} Solo Salida</span>
         </div>
         <div class="row gap">
-          <button class="btn ok sm" id="dpassbtn">${RD.icon('ticket')} Pase Diario (S/ 5)</button>
+          <button class="btn ok sm" id="dpassbtn">${RD.icon('ticket')} Pase Diario</button>
           <button class="btn sm" id="btn_open_tablet" title="Abrir Pantalla de Cliente / Tablet de Mostrador en 2do Monitor">${RD.icon('building')} Pantalla Tablet</button>
           <button class="btn sm" id="sync">${RD.icon('refresh')} Sincronizar</button>
         </div>
@@ -571,7 +583,7 @@
       </div>
       <div class="card mt">
         <h3>Búsqueda manual</h3>
-        <input id="msearch" placeholder="Buscar por Nombre, DNI o Código (ej. RD-0012, RD-DAY-001)" autocomplete="off">
+        <input id="msearch" placeholder="Buscar por Nombre, DNI o Código (ej. RG-0012, RG-DAY-001)" autocomplete="off">
         <div class="list mt2" id="mres"></div>
       </div>
       <div class="card mt">
@@ -691,7 +703,7 @@
       view.querySelector('#dpassbtn').onclick = () => dailyPassDialog(() => { drawRecent(); info(); });
       view.querySelector('#btn_open_tablet')?.addEventListener('click', () => {
         if (typeof RD.openCustomerDisplayWindow === 'function') RD.openCustomerDisplayWindow();
-        else window.open('/display.html', 'RD_CustomerDisplay', 'width=1024,height=600,menubar=no,toolbar=no');
+        else window.open('/display.html', 'RG_CustomerDisplay', 'width=1024,height=600,menubar=no,toolbar=no');
       });
 
       // --- Lector USB / Bluetooth 2D (emulación de teclado física) ---

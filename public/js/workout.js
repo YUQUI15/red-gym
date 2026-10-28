@@ -288,7 +288,7 @@
           <label class="field"><span>Repeticiones logradas</span><input id="rm_r" type="number" min="1" max="30" value="${defaultReps}"></label>
         </div>
       </div>
-      <div class="card center mb" style="background:rgba(183,110,121,0.12);border-color:var(--gold)">
+      <div class="card center mb" style="background:rgba(200,30,30,0.12);border-color:var(--gold)">
         <div class="muted small">Tu 1RM Estimado</div>
         <div class="gold" id="rm_res" style="font-size:2.4rem;font-weight:900">-- kg</div>
         <div class="small muted">Peso teórico máximo para 1 repetición limpia</div>
@@ -487,7 +487,7 @@
           </label>
         </div>
       </div>
-      <div class="card center mb" style="background:rgba(183,110,121,0.12);border-color:var(--gold)">
+      <div class="card center mb" style="background:rgba(200,30,30,0.12);border-color:var(--gold)">
         <div class="muted small">Calorías Diarias Recomendadas</div>
         <div class="gold" id="nt_cals" style="font-size:2.4rem;font-weight:900">-- kcal</div>
         <div class="small muted" id="nt_desc">TDEE estimado</div>
@@ -662,8 +662,8 @@
             const x = padX + i * ((W - padX - 10) / weeklyVolume.length) + 6;
             const y = H - padY - h;
             return `
-              <rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="4" fill="#f5b400" opacity="0.85" class="chart-bar"/>
-              <text x="${x + barW / 2}" y="${y - 5}" fill="#f5b400" font-size="9" font-weight="700" text-anchor="middle">${Math.round(item.volume / 1000)}k</text>
+              <rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="4" fill="#ef4444" opacity="0.85" class="chart-bar"/>
+              <text x="${x + barW / 2}" y="${y - 5}" fill="#ef4444" font-size="9" font-weight="700" text-anchor="middle">${Math.round(item.volume / 1000)}k</text>
               <text x="${x + barW / 2}" y="${H - 8}" fill="#736878" font-size="9" text-anchor="middle">S${i + 1}</text>`;
           }).join('')}
         </svg>

@@ -8,17 +8,18 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>GIMNASIO RED GYM - Panel de Gestión</title>
+  <link rel="icon" type="image/png" href="/favicon-64.png">
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="manifest" href="/admin/manifest.json">
-  <link rel="stylesheet" href="/css/style.css?v=5.0">
+  <link rel="stylesheet" href="/css/style.css?v=6.0">
   <script>
     (function(){
       var t = localStorage.getItem('rd_theme');
       if (t === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
         var m = document.querySelector('meta[name="theme-color"]');
-        if (m) m.setAttribute('content', '#FAF7FA');
+        if (m) m.setAttribute('content', '#FAF8F8');
       }
     })();
   </script>
@@ -32,13 +33,13 @@
   <script src="/vendor/qrcode.js"></script>
   <script src="/vendor/jsQR.js"></script>
   <!-- Módulos de la aplicación -->
-  <script src="/js/common.js?v=5.0"></script>
-  <script src="/js/workout.js?v=5.0"></script>
-  <script src="/js/admin-core.js?v=5.0"></script>
-  <script src="/js/admin-scan.js?v=5.0"></script>
-  <script src="/js/admin-members.js?v=5.0"></script>
-  <script src="/js/admin-other.js?v=5.0"></script>
-  <script src="/js/admin-announce.js?v=5.0"></script>
+  <script src="/js/common.js?v=6.0"></script>
+  <script src="/js/workout.js?v=6.0"></script>
+  <script src="/js/admin-core.js?v=6.0"></script>
+  <script src="/js/admin-scan.js?v=6.0"></script>
+  <script src="/js/admin-members.js?v=6.0"></script>
+  <script src="/js/admin-other.js?v=6.0"></script>
+  <script src="/js/admin-announce.js?v=6.0"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (window.RDboot) window.RDboot();

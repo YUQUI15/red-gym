@@ -1,6 +1,6 @@
 /* GIMNASIO RED GYM - Hub del socio
  * Acceso propio (alias + contraseña), sesiones por dispositivo, bandeja de avisos y notificaciones push opt-in.
- * El código RD-xxxx sigue siendo el identificador interno inmutable del socio. */
+ * El código RG-xxxx sigue siendo el identificador interno inmutable del socio. */
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -30,7 +30,7 @@ module.exports = function mountMemberHub(api, ctx) {
     return null;
   }
   function setRecoveryCookie(req, res, token) {
-    res.setHeader('Set-Cookie', `rd_m=${token}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax${isSecure(req) ? '; Secure' : ''}`);
+    res.setHeader('Set-Cookie', `rg_m=${token}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax${isSecure(req) ? '; Secure' : ''}`);
   }
   function deviceLabel(ua = '') {
     const os = /iPhone|iPad|iPod/i.test(ua) ? 'iPhone/iPad' : /Android/i.test(ua) ? 'Android' : /Windows/i.test(ua) ? 'Windows' : /Mac OS X/i.test(ua) ? 'Mac' : /Linux/i.test(ua) ? 'Linux' : 'Dispositivo';
@@ -39,7 +39,7 @@ module.exports = function mountMemberHub(api, ctx) {
   }
 
   // ---------------- Credenciales propias ----------------
-  const RESERVED = new Set(['admin', 'administrador', 'rd', 'rdfitness', 'recepcion', 'soporte', 'gimnasio', 'gym', 'socio', 'usuario', 'root', 'test']);
+  const RESERVED = new Set(['admin', 'administrador', 'rg', 'redgym', 'red', 'recepcion', 'soporte', 'gimnasio', 'gym', 'socio', 'usuario', 'root', 'test']);
   const getCred = id => q.get('SELECT * FROM member_credentials WHERE member_id=?', id);
 
   function findMember(ident) {
@@ -48,8 +48,8 @@ module.exports = function mountMemberHub(api, ctx) {
     // 1. Prioridad: DNI del socio (identificador vitalicio en Perú o extranjero)
     const byDni = q.get('SELECT * FROM members WHERE dni=? COLLATE NOCASE', s);
     if (byDni) return byDni;
-    // 2. Formato código de socio: RD-0001, rd-1, etc.
-    if (/^rd-?\d+$/i.test(s)) return q.get('SELECT * FROM members WHERE code=?', memberCode(parseInt(s.replace(/\D/g, ''), 10)));
+    // 2. Formato código de socio: RG-0001, rd-1, etc.
+    if (/^(?:rg|rd)-?\d+$/i.test(s)) return q.get('SELECT * FROM members WHERE code=?', memberCode(parseInt(s.replace(/\D/g, ''), 10)));
     // 3. Código numérico corto (1 a 6 dígitos)
     if (/^\d{1,6}$/.test(s)) {
       const byCode = q.get('SELECT * FROM members WHERE code=?', memberCode(parseInt(s, 10)));
@@ -79,7 +79,7 @@ module.exports = function mountMemberHub(api, ctx) {
   }
   function aliasProblem(alias, selfId) {
     if (!/^[a-z0-9._]{3,20}$/i.test(alias)) return 'El usuario debe tener de 3 a 20 caracteres: letras, números, punto o guion bajo.';
-    if (/^\d+$/.test(alias) || /^rd-?\d+$/i.test(alias)) return 'Elige un usuario que no sea solo números ni parecido a tu código RD.';
+    if (/^\d+$/.test(alias) || /^(?:rg|rd)-?\d+$/i.test(alias)) return 'Elige un usuario que no sea solo números ni parecido a tu código RG.';
     if (RESERVED.has(alias.toLowerCase())) return 'Ese usuario no está disponible.';
     const taken = q.get('SELECT member_id FROM member_credentials WHERE alias=?', alias);
     if (taken && taken.member_id !== selfId) return 'Ese usuario ya está en uso. Prueba con otro.';
@@ -105,7 +105,7 @@ module.exports = function mountMemberHub(api, ctx) {
     return token;
   }
 
-  const DUMMY_HASH = bcrypt.hashSync('rd-fitness-dummy', 8);
+  const DUMMY_HASH = bcrypt.hashSync('red-gym-dummy', 8);
 
   api.post('/auth/member-login', wrap((req, res) => {
     if (limited(req)) return bad(res, 'Demasiados intentos. Espera un minuto.', 429);
@@ -126,11 +126,11 @@ module.exports = function mountMemberHub(api, ctx) {
 
   // Recupera la sesión de este dispositivo si el navegador borró el almacenamiento local (cookie httpOnly)
   api.post('/auth/resume', wrap((req, res) => {
-    const token = readCookie(req, 'rd_m');
+    const token = readCookie(req, 'rg_m');
     const s = token ? loadSession({ headers: { authorization: 'Bearer ' + token } }) : null;
     const m = s && s.kind === 'member' ? q.get('SELECT * FROM members WHERE id=?', s.ref_id) : null;
     if (!m || m.status === 'inactive') {
-      res.setHeader('Set-Cookie', 'rd_m=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
+      res.setHeader('Set-Cookie', 'rg_m=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
       return bad(res, 'Sin sesión', 401);
     }
     const cr = getCred(m.id);
@@ -421,7 +421,7 @@ module.exports = function mountMemberHub(api, ctx) {
     if (!vapid || !vapid.publicKey || !vapid.privateKey) {
       try { vapid = webpush.generateVAPIDKeys(); fs.writeFileSync(f, JSON.stringify(vapid)); } catch (e) { console.error('VAPID:', e.message); vapid = null; }
     }
-    if (vapid) { try { webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@rdfitness.club', vapid.publicKey, vapid.privateKey); } catch (e) { console.error('VAPID:', e.message); vapid = null; } }
+    if (vapid) { try { webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:soporte@redgym.pe', vapid.publicKey, vapid.privateKey); } catch (e) { console.error('VAPID:', e.message); vapid = null; } }
   }
   const pushEnabled = () => !!(webpush && vapid);
 

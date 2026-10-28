@@ -23,6 +23,9 @@ const imgScanner = toBase64('dev_scanner_2d.png');
 const imgPrinter = toBase64('dev_thermal_printer.png');
 const imgPhone = toBase64('dev_member_phone.png');
 const imgMiniPc = toBase64('dev_minipc_pos.png');
+const imgLogo = fs.existsSync(path.join(rootDir, 'public/icons/icon-192.png'))
+  ? 'data:image/png;base64,' + fs.readFileSync(path.join(rootDir, 'public/icons/icon-192.png')).toString('base64')
+  : '/logo.svg?v=6.0';
 
 const htmlContent = `<!DOCTYPE html>
 <html lang="es">
@@ -32,12 +35,12 @@ const htmlContent = `<!DOCTYPE html>
   <title>Dossier Maestro: Sistema Tecnológico Integral para Gimnasios</title>
   <style>
     :root {
-      --bg: #090e17;
-      --card: #111a2e;
-      --card-2: #16223b;
+      --bg: #0b0b0d;
+      --card: #141418;
+      --card-2: #1c1c22;
       --border: rgba(255, 255, 255, 0.12);
-      --gold: #f5b400;
-      --gold-soft: rgba(245, 180, 0, 0.14);
+      --gold: #ef4444;
+      --gold-soft: rgba(239, 68, 68, 0.14);
       --emerald: #10b981;
       --emerald-soft: rgba(16, 185, 129, 0.14);
       --cyan: #06b6d4;
@@ -49,7 +52,7 @@ const htmlContent = `<!DOCTYPE html>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: radial-gradient(circle at 15% 0%, #15223e 0%, var(--bg) 60%);
+      background: radial-gradient(circle at 15% 0%, #2a0a0e 0%, var(--bg) 60%);
       color: var(--text);
       line-height: 1.5;
       padding-bottom: 70px;
@@ -388,7 +391,8 @@ const htmlContent = `<!DOCTYPE html>
 <body>
   <header class="topbar">
     <div class="brand-pill">
-      <span class="brand-badge">RED GYM 360°</span>
+      <img src="${imgLogo}" alt="GIMNASIO RED GYM" style="width:36px;height:36px;border-radius:8px;object-fit:contain" />
+      <span class="brand-badge" style="color:#fff;background:linear-gradient(135deg,#ef4444,#b91c1c)">RED GYM 360°</span>
       <span>Dossier Técnico Comercial para <strong id="topGymName" style="color:var(--gold)">GIMNASIO RED GYM</strong></span>
     </div>
     <div class="customizer">
@@ -404,8 +408,13 @@ const htmlContent = `<!DOCTYPE html>
   <main class="container">
     <!-- SECCIÓN 1: PORTADA Y RESUMEN DEL SISTEMA -->
     <section class="hero">
-      <div class="hero-tag">Documento Oficial de Presentación de Solución Tecnológica</div>
-      <h1>Ecosistema Digital Integral de Gestión, Control de Accesos QR, Caja Blindada y Pantalla de Recepción para <span class="gym-name">TU GIMNASIO</span></h1>
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:8px">
+        <img src="${imgLogo}" alt="GIMNASIO RED GYM" style="width:72px;height:72px;border-radius:14px;object-fit:contain;box-shadow:0 6px 20px rgba(0,0,0,0.4)" />
+        <div>
+          <div class="hero-tag">Documento Oficial de Presentación de Solución Tecnológica · Chivay, Arequipa</div>
+          <h1 style="margin:0">Ecosistema Digital Integral de Gestión, Control de Accesos QR, Caja Blindada y Pantalla de Recepción para <span class="gym-name">GIMNASIO RED GYM</span></h1>
+        </div>
+      </div>
       <p>
         Plataforma tecnológica completa diseñada específicamente para la administración moderna de gimnasios y centros de entrenamiento. Elimina errores en recepción, garantiza el cuadre diario de caja, entrega a los socios una aplicación móvil propia para sus entrenamientos y se adapta con total flexibilidad a las computadoras y pantallas con las que el local ya cuente.
       </p>

@@ -1,7 +1,7 @@
 {
-  "name": "RD Fitness - Panel de Gestión",
-  "short_name": "RD Panel",
-  "description": "Escáner de acceso y gestión de RD Fitness Club",
+  "name": "GIMNASIO RED GYM - Panel de Gestión",
+  "short_name": "RED GYM Panel",
+  "description": "Escáner de acceso y gestión de GIMNASIO RED GYM",
   "start_url": "/admin/",
   "scope": "/admin/",
   "display": "standalone",
@@ -9,8 +9,23 @@
   "theme_color": "#0b0b0d",
   "lang": "es-PE",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
