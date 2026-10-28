@@ -363,13 +363,13 @@ for (const f of ['public/js/common.js', 'public/js/admin-other.js']) {
   const start = s.indexOf('RD.LOGO_SVG = function');
   if (start >= 0) {
     const end = s.indexOf('</svg>`;\n  };', start);
-    if (end >= 0) {
+    if (end >= 0 && s.slice(start, end).includes('rdGold')) {
       const newFn = `RD.LOGO_SVG = function (size = 54) {
-    return \`<img src="/logo.svg?v=6.0" alt="GIMNASIO RED GYM" style="width:\${size}px;height:\${size}px;object-fit:contain;display:inline-block;vertical-align:middle;border-radius:10px">\`;
+    return \`<img src="/logo.svg?v=6.1" alt="GIMNASIO RED GYM" style="width:\${size}px;height:\${size}px;object-fit:contain;display:inline-block;vertical-align:middle;border-radius:10px">\`;
   };`;
       s = s.slice(0, start) + newFn + s.slice(end + '</svg>`;\n  };'.length);
       write(f, s);
-      log.push(`${f}: RD.LOGO_SVG actualizado con /logo.svg?v=6.0`);
+      log.push(`${f}: RD.LOGO_SVG actualizado con /logo.svg?v=6.1`);
     }
   }
 }

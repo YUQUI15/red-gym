@@ -536,6 +536,191 @@
     return `<img src="/logo.svg?v=6.0" alt="GIMNASIO RED GYM" style="width:${size}px;height:${size}px;object-fit:contain;display:inline-block;vertical-align:middle;border-radius:10px">`;
   };
 
+  RD.openModal = (title, html, opts = {}) => {
+    const back = document.createElement('div'); back.className = 'modal-back';
+    back.innerHTML = `<div class="modal ${opts.wide ? 'wide' : ''}" role="dialog" aria-modal="true"><div class="modal-head"><h3 style="display:flex;align-items:center;gap:8px">${RD.safeTitle(title)}</h3><button class="icon-btn" data-close aria-label="Cerrar">${RD.icon('x', '', 18)}</button></div><div class="modal-body">${html}</div></div>`;
+    document.body.appendChild(back);
+    document.body.classList.add('no-scroll');
+    const close = () => { back.remove(); if (!document.querySelector('.modal-back')) document.body.classList.remove('no-scroll'); opts.onClose && opts.onClose(); };
+    back.addEventListener('click', e => { if (e.target === back && !opts.sticky) close(); if (e.target.closest('[data-close]')) close(); });
+    return { el: back.querySelector('.modal-body'), root: back, close };
+  };
+  RD.confirm = (title, text, okLabel = 'Confirmar', danger = false) => new Promise(resolve => {
+    const m = RD.openModal(title, `<p>${RD.esc(text)}</p><div class="row end gap"><button class="btn ghost" data-no>Cancelar</button><button class="btn ${danger ? 'danger' : 'primary'}" data-yes>${RD.safeTitle(okLabel)}</button></div>`, { onClose: () => resolve(false) });
+    m.el.querySelector('[data-no]').onclick = () => { m.close(); resolve(false); };
+    m.el.querySelector('[data-yes]').onclick = () => { m.root.remove(); document.body.classList.remove('no-scroll'); resolve(true); };
+  });
+  RD.prompt = (title, label, placeholder = '') => new Promise(resolve => {
+    const m = RD.openModal(title, `<label class="field"><span>${RD.esc(label)}</span><input id="pr-in" placeholder="${RD.esc(placeholder)}" autofocus></label><div class="row end gap"><button class="btn ghost" data-no>Cancelar</button><button class="btn primary" data-yes>Aceptar</button></div>`, { onClose: () => resolve(null) });
+    const inp = m.el.querySelector('#pr-in'); inp.focus();
+    const done = v => { m.root.remove(); document.body.classList.remove('no-scroll'); resolve(v); };
+    m.el.querySelector('[data-no]').onclick = () => done(null);
+    m.el.querySelector('[data-yes]').onclick = () => done(inp.value.trim() || null);
+    inp.onkeydown = e => { if (e.key === 'Enter') done(inp.value.trim() || null); };
+  });
+  RD.busy = async (btn, fn) => {
+    if (btn) { btn.disabled = true; btn.dataset.t = btn.innerHTML; btn.innerHTML = `${RD.icon('hourglass', '', 14)} Procesando…`; }
+    try { return await fn(); } finally { if (btn) { btn.disabled = false; if (btn.dataset.t !== undefined) btn.innerHTML = btn.dataset.t; } }
+  };
+
+  // ---------- Sonidos y Alertas Táctiles (Dual-Engine: HTML5 Audio Blob + Web Audio) ----------
+  let actx = null;
+  const ensureAudio = () => {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx && actx.state === 'suspended') actx.resume().catch(() => {});
+    } catch {}
+    return actx;
+  };
+
+  // Genera un audio WAV PCM puro en memoria (Blob URL) con timbre de campana armónica
+  let chimeBlobUrl = null;
+  function getChimeBlobUrl() {
+    if (chimeBlobUrl) return chimeBlobUrl;
+    try {
+      const sampleRate = 22050;
+      const duration = 0.85;
+      const numSamples = Math.floor(sampleRate * duration);
+      const wavBytes = new Uint8Array(44 + numSamples * 2);
+      const view = new DataView(wavBytes.buffer);
+
+      view.setUint32(0, 0x52494646, false); // "RIFF"
+      view.setUint32(4, 36 + numSamples * 2, true);
+      view.setUint32(8, 0x57415645, false); // "WAVE"
+      view.setUint32(12, 0x666d7420, false); // "fmt "
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      view.setUint32(36, 0x64617461, false); // "data"
+      view.setUint32(40, numSamples * 2, true);
+
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        const decay = Math.exp(-4.2 * t);
+        const s = (Math.sin(2 * Math.PI * 880 * t) * 0.5 +
+                   Math.sin(2 * Math.PI * 1108.73 * t) * 0.3 +
+                   Math.sin(2 * Math.PI * 1318.51 * t) * 0.35 +
+                   Math.sin(2 * Math.PI * 1760 * t) * 0.2) * decay;
+        const val = Math.max(-1, Math.min(1, s * 0.85));
+        view.setInt16(44 + i * 2, val < 0 ? val * 0x8000 : val * 0x7FFF, true);
+      }
+      const blob = new Blob([wavBytes], { type: 'audio/wav' });
+      chimeBlobUrl = URL.createObjectURL(blob);
+      return chimeBlobUrl;
+    } catch {
+      return null;
+    }
+  }
+
+  let chimeAudio = null;
+  const getChimeAudio = () => {
+    if (!chimeAudio) {
+      try {
+        const url = getChimeBlobUrl();
+        if (url) {
+          chimeAudio = new Audio(url);
+          chimeAudio.volume = 1.0;
+        }
+      } catch {}
+    }
+    return chimeAudio;
+  };
+
+  // Desbloqueo activo en móviles en cualquier toque o clic
+  let audioUnlocked = false;
+  const unlockAudio = () => {
+    try {
+      ensureAudio();
+      const a = getChimeAudio();
+      if (a && !audioUnlocked) {
+        a.volume = 0.001;
+        const p = a.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            a.pause();
+            a.currentTime = 0;
+            a.volume = 1.0;
+            audioUnlocked = true;
+          }).catch(() => {});
+        }
+      }
+    } catch {}
+  };
+  ['click', 'touchstart', 'touchend', 'pointerdown'].forEach(ev => {
+    window.addEventListener(ev, unlockAudio, { passive: true });
+  });
+
+  RD.beep = (kind) => {
+    try {
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      const seq = {
+        ok: [[880, .12]],
+        warn: [[660, .12], [660, .12]],
+        denied: [[220, .35], [180, .45]],
+        tick: [[1000, .05]],
+        done: [[880, .15], [1175, .25]],
+        bell: [[523.25, .15], [659.25, .15], [783.99, .25], [1046.50, .4]]
+      }[kind] || [];
+      let t = ctx.currentTime;
+      seq.forEach(([f, d]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = kind === 'denied' ? 'sawtooth' : kind === 'bell' ? 'triangle' : 'sine';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(kind === 'bell' ? 0.7 : 0.4, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+        o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + d + 0.02); t += d + 0.05;
+      });
+      if ((kind === 'denied' || kind === 'bell') && navigator.vibrate) {
+        navigator.vibrate(kind === 'bell' ? [300, 150, 300, 150, 450] : [200, 100, 200]);
+      }
+    } catch { }
+  };
+
+  RD.playNotificationAlert = (mode = 'sound') => {
+    try {
+      if (mode === 'silent') return;
+      if (navigator.vibrate) {
+        try {
+          navigator.vibrate(mode === 'vibrate' ? [350, 150, 350, 150, 450] : [250, 120, 250, 120, 400]);
+        } catch {}
+      }
+      if (mode === 'vibrate') return;
+
+      try {
+        const a = getChimeAudio();
+        if (a) {
+          a.currentTime = 0;
+          a.volume = 1.0;
+          const p = a.play();
+          if (p && typeof p.then === 'function') {
+            p.catch(() => { RD.beep('bell'); });
+          }
+        } else {
+          RD.beep('bell');
+        }
+      } catch {
+        RD.beep('bell');
+      }
+
+      try { RD.beep('bell'); } catch {}
+    } catch {}
+  };
+
+  // ---------- QR ----------
+  RD.qrSvg = (text, { margin = 2, fg = '#000', bg = '#fff' } = {}) => {
+    const qr = window.qrcode(0, 'M'); qr.addData(text); qr.make();
+    const n = qr.getModuleCount(); let d = '';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c + margin} ${r + margin}h1v1h-1z`;
+    const s = n + margin * 2;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${s} ${s}" shape-rendering="crispEdges"><rect width="${s}" height="${s}" fill="${bg}"/><path d="${d}" fill="${fg}"/></svg>`;
+  };
+
   // Firma HMAC igual que el servidor
   const enc = new TextEncoder();
   const keyCache = new Map();
@@ -550,11 +735,11 @@
     const s = String(text || '').trim();
     if (!s) return null;
     // Socio formal firmado: RED1.RG-0001.P1.xxxx o RED1.RG-0001.Dxxx.xxxx
-    const m = /^(?:RED1|RED1)\.((?:RG|RD)-\d{1,8})\.([PD])(\d+)\.([0-9a-f]{12})$/.exec(s);
+    const m = /^(?:RED1|RD1)\.((?:RG|RD)-\d{1,8})\.([PD])(\d+)\.([0-9a-f]{12})$/.exec(s);
     if (m) return { type: 'member', code: m[1], kind: m[2], n: Number(m[3]), sig: m[4] };
 
     // Pase diario firmado: RED1.DAY.RG-DAY-xxxx.2026-10-12.xxxx
-    const d = /^(?:RED1|RED1)\.DAY\.((?:RG|RD)-DAY-[A-Za-z0-9\-]+)\.(\d{4}-\d{2}-\d{2})\.([0-9a-f]{12})$/.exec(s);
+    const d = /^(?:RED1|RD1)\.DAY\.((?:RG|RD)-DAY-[A-Za-z0-9\-]+)\.(\d{4}-\d{2}-\d{2})\.([0-9a-f]{12})$/.exec(s);
     if (d) return { type: 'daily', code: d[1], day: d[2], sig: d[3] };
 
     // Pase diario directo: RG-DAY-xxxx
