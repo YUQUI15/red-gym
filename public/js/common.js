@@ -533,7 +533,7 @@
     .join('');
 
   RD.LOGO_SVG = function (size = 54) {
-    return `<img src="/logo.svg?v=6.0" alt="GIMNASIO RED GYM" style="width:${size}px;height:${size}px;object-fit:contain;display:inline-block;vertical-align:middle;border-radius:10px">`;
+    return `<img src="/logo-red-gym.png?v=6.3" alt="GIMNASIO RED GYM" style="width:${size}px;height:${size}px;object-fit:contain;display:inline-block;vertical-align:middle;background:transparent !important;filter:drop-shadow(0 2px 5px rgba(220,38,38,0.22))">`;
   };
 
   RD.openModal = (title, html, opts = {}) => {

@@ -6,7 +6,7 @@
   <title>Impresión de Tarjetas y Carnets QR - GIMNASIO RED GYM</title>
   <link rel="icon" type="image/png" href="/favicon-64.png">
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
-  <link rel="stylesheet" href="/css/style.css?v=6.2">
+  <link rel="stylesheet" href="/css/style.css?v=6.3">
   <style>
     body { background: #141418; color: #fff; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     .toolbar { position: sticky; top: 0; z-index: 100; background: rgba(11,11,13,0.96); backdrop-filter: blur(10px); border-bottom: 1px solid #2b2b32; padding: .8rem 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
@@ -120,7 +120,7 @@
 <body>
   <div class="toolbar noprint">
     <div class="row gap">
-      <img src="/logo.svg?v=6.2" style="height:34px;width:34px;border-radius:8px;object-fit:contain" alt="RED GYM">
+      <img src="/logo-red-gym.png?v=6.3" style="height:34px;width:34px;border-radius:8px;object-fit:contain" alt="RED GYM">
       <div>
         <b>Estudio de Tarjetas y Carnets Físicos QR (CR-80 PVC)</b>
         <div class="muted small" id="status">Cargando socios…</div>
@@ -142,7 +142,7 @@
   <div class="sheet" id="cards"></div>
 
   <script src="/vendor/qrcode.js"></script>
-  <script src="/js/common.js?v=6.2"></script>
+  <script src="/js/common.js?v=6.3"></script>
   <script>
     (async () => {
       const RD = window.RD;
@@ -190,7 +190,7 @@
             <div style="grid-column:1/-1;max-width:380px;margin:30px auto;width:100%">
               <form class="box" id="cardlogin">
                 <div class="brand">
-                  <img class="logo" src="/logo.svg?v=6.2" alt="RED GYM">
+                  <img class="logo" src="/logo-red-gym.png?v=6.3" alt="RED GYM">
                   <h2>GIMNASIO RED GYM</h2>
                   <p class="muted small">Ingresa con tu cuenta de administrador o recepción para imprimir carnets QR</p>
                 </div>
@@ -254,7 +254,7 @@
             <div class="pvc-card">
               <div class="card-top">
                 <div class="card-logo">
-                  <img src="/logo.svg?v=6.2" alt="RED GYM">
+                  <img src="/logo-red-gym.png?v=6.3" alt="RED GYM">
                   <div>
                     <div class="brand-txt">${RD.esc(gym.gym_name || 'GIMNASIO RED GYM')}</div>
                     <div class="slogan">${RD.esc(gym.gym_slogan || 'Fuerza · Pasión · Resultados')}</div>
@@ -286,7 +286,7 @@
             const back = `
             <div class="pvc-card back">
               <div class="card-logo" style="justify-content:center;margin-bottom:4px">
-                <img src="/logo.svg?v=6.2" style="height:24px;width:24px" alt="RED GYM">
+                <img src="/logo-red-gym.png?v=6.3" style="height:24px;width:24px" alt="RED GYM">
                 <div class="brand-txt">${RD.esc(gym.gym_name || 'GIMNASIO RED GYM')}</div>
               </div>
               <div class="back-rules">
