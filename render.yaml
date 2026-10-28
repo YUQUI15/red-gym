@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: red-gym
+    env: node
+    plan: free
+    region: ohio
+    buildCommand: npm install
+    startCommand: node server/server.js
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: ADMIN_PASSWORD
+        value: Red-Admin-2026
+      - key: UPSTASH_REDIS_REST_URL
+        value: https://wise-pipefish-172734.upstash.io
+      - key: UPSTASH_REDIS_REST_TOKEN
+        value: gQAAAAAAAqK-AAIgcDI0M2ZkNzhlYmRmMTI0NGVmYWZjNDk2MDc4ZWI2NDdlMA
