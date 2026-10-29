@@ -112,7 +112,7 @@ function addDataSheet(ctx, key) {
     const labelCol = [...Array(n).keys()].find(i => !sums.includes(i));
     t.headers.forEach((h, i) => {
       const c = tr.getCell(i + 1);
-      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFE6C4' } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
       c.font = { bold: true, name: 'Calibri', size: 10 }; c.border = { ...border, top: { style: 'medium', color: { argb: INK } } };
       if (i === labelCol) c.value = 'TOTAL';
       if (sums.includes(i)) {
@@ -138,14 +138,14 @@ function addDataSheet(ctx, key) {
   if (key === 'shifts' && rows.length) cf.unshift({ ref: `J${FIRST}:J${last}`, rules: [{ type: 'expression', formulae: [`J${FIRST}<0`], style: { font: { bold: true, color: { argb: RED[0] } } } }, { type: 'expression', formulae: [`J${FIRST}>0`], style: { font: { bold: true, color: { argb: 'FF1F4E79' } } } }] });
   if (rows.length) {
     const bar = (col, argb) => cf.push({ ref: `${colL(col + 1)}${FIRST}:${colL(col + 1)}${last}`, rules: [{ type: 'dataBar', cfvo: [{ type: 'min' }, { type: 'max' }], color: { argb } }] });
-    if (key === 'daily') { bar(4, 'FFD4AF37'); bar(7, 'FF8FB8DE'); }
-    if (key === 'methods') bar(3, 'FFD4AF37');
-    if (key === 'topProducts') { bar(2, 'FFD4AF37'); bar(3, 'FF9BD39B'); }
-    if (key === 'hourly') { bar(1, 'FFD4AF37'); bar(2, 'FF8FB8DE'); bar(3, 'FFF4A9A8'); }
-    if (key === 'weekday') bar(1, 'FFD4AF37');
-    if (key === 'plans') bar(6, 'FFD4AF37');
+    if (key === 'daily') { bar(4, 'FFEF4444'); bar(7, 'FF8FB8DE'); }
+    if (key === 'methods') bar(3, 'FFEF4444');
+    if (key === 'topProducts') { bar(2, 'FFEF4444'); bar(3, 'FF9BD39B'); }
+    if (key === 'hourly') { bar(1, 'FFEF4444'); bar(2, 'FF8FB8DE'); bar(3, 'FFF4A9A8'); }
+    if (key === 'weekday') bar(1, 'FFEF4444');
+    if (key === 'plans') bar(6, 'FFEF4444');
     if (key === 'inventory') bar(6, 'FF9BD39B');
-    if (key === 'heatmap') cf.push({ ref: `B${FIRST}:${colL(n - 1)}${last}`, rules: [{ type: 'colorScale', cfvo: [{ type: 'min' }, { type: 'percentile', value: 50 }, { type: 'max' }], color: [{ argb: 'FFFFFFFF' }, { argb: 'FFF6E3A1' }, { argb: 'FFD4AF37' }] }] });
+    if (key === 'heatmap') cf.push({ ref: `B${FIRST}:${colL(n - 1)}${last}`, rules: [{ type: 'colorScale', cfvo: [{ type: 'min' }, { type: 'percentile', value: 50 }, { type: 'max' }], color: [{ argb: 'FFFFFFFF' }, { argb: 'FFFCA5A5' }, { argb: 'FFEF4444' }] }] });
   }
   ws.conditionalFormatting = cf;
   pageSetup(ws, HDR);
@@ -216,7 +216,7 @@ function addDashboard(ctx) {
         c += span;
       });
     };
-    put(r0 + 1, headers, () => ({ fill: solid('FFEFE6C4'), font: { bold: true, size: 9 } }));
+    put(r0 + 1, headers, () => ({ fill: solid('FFFEE2E2'), font: { bold: true, size: 9 } }));
     rows.forEach((row, i) => put(r0 + 2 + i, row, () => ({ fill: solid(i % 2 ? PAPER : 'FFFFFFFF'), font: { size: 10, bold: !!opts.boldLast && i === rows.length - 1 } })));
     // barras de datos por columna de valor
     (opts.bars || []).forEach(([vi, argb]) => {
@@ -265,7 +265,7 @@ function addDashboard(ctx) {
   ws.mergeCells(hdr, 1, hdr, 3); Object.assign(ws.getCell(hdr, 1), { value: 'Día' });
   ds.hours.forEach((h, i) => { ws.getCell(hdr, 4 + i).value = `${h}h`; });
   ws.mergeCells(hdr, 23, hdr, 24); ws.getCell(hdr, 23).value = 'Total';
-  for (let c = 1; c <= COLS; c++) Object.assign(ws.getCell(hdr, c), { fill: solid('FFEFE6C4'), font: { bold: true, size: 8 }, alignment: { horizontal: 'center' }, border });
+  for (let c = 1; c <= COLS; c++) Object.assign(ws.getCell(hdr, c), { fill: solid('FFFEE2E2'), font: { bold: true, size: 8 }, alignment: { horizontal: 'center' }, border });
   ds.heat.forEach((row, di) => {
     const r = hdr + 1 + di;
     ws.mergeCells(r, 1, r, 3); ws.mergeCells(r, 23, r, 24);
@@ -275,7 +275,7 @@ function addDashboard(ctx) {
     Object.assign(ws.getCell(r, 23), { value: { formula: `SUM(D${r}:V${r})`, result: tot }, font: { bold: true }, alignment: { horizontal: 'center' } });
     for (let c = 1; c <= COLS; c++) ws.getCell(r, c).border = border;
   });
-  ws.addConditionalFormatting({ ref: `D${hdr + 1}:V${hdr + 7}`, rules: [{ type: 'colorScale', cfvo: [{ type: 'min' }, { type: 'percentile', value: 50 }, { type: 'max' }], color: [{ argb: 'FFFFFFFF' }, { argb: 'FFF6E3A1' }, { argb: 'FFD4AF37' }] }] });
+  ws.addConditionalFormatting({ ref: `D${hdr + 1}:V${hdr + 7}`, rules: [{ type: 'colorScale', cfvo: [{ type: 'min' }, { type: 'percentile', value: 50 }, { type: 'max' }], color: [{ argb: 'FFFFFFFF' }, { argb: 'FFFCA5A5' }, { argb: 'FFEF4444' }] }] });
 
   const nr = hdr + 9;
   ws.mergeCells(nr, 1, nr + 2, COLS);

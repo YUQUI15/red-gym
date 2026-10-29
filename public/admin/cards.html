@@ -6,7 +6,7 @@
   <title>Estudio de Tarjetas y Carnets QR (PDF / PNG / WhatsApp) - GIMNASIO RED GYM</title>
   <link rel="icon" type="image/png" href="/favicon-64.png">
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
-  <link rel="stylesheet" href="/css/style.css?v=6.5">
+  <link rel="stylesheet" href="/css/style.css?v=6.6">
   <script>
     (function(){
       var t = localStorage.getItem('rd_theme');
@@ -155,7 +155,7 @@
 <body>
   <div class="toolbar noprint">
     <div class="row gap">
-      <img src="/logo-red-gym.png?v=6.5" style="height:36px;width:36px;border-radius:8px;object-fit:contain" alt="RED GYM">
+      <img src="/logo-red-gym.png?v=6.6" style="height:36px;width:36px;border-radius:8px;object-fit:contain" alt="RED GYM">
       <div>
         <b>Estudio de Tarjetas QR · Guardar en PDF, Imagen HD y Compartir</b>
         <div class="muted small" id="status">Cargando socios…</div>
@@ -187,7 +187,7 @@
   <div class="sheet" id="cards"></div>
 
   <script src="/vendor/qrcode.js"></script>
-  <script src="/js/common.js?v=6.5"></script>
+  <script src="/js/common.js?v=6.6"></script>
   <script>
     (async () => {
       const RD = window.RD;
@@ -213,7 +213,7 @@
         });
       }
       async function getLogoImg() {
-        if (!cachedLogoImg) cachedLogoImg = await loadImage('/logo-red-gym.png?v=6.5');
+        if (!cachedLogoImg) cachedLogoImg = await loadImage('/logo-red-gym.png?v=6.6');
         return cachedLogoImg;
       }
 
@@ -722,7 +722,7 @@
               <div style="grid-column:1/-1;max-width:380px;margin:30px auto;width:100%">
                 <form class="box" id="cardlogin">
                   <div class="brand">
-                    <img class="logo" src="/logo-red-gym.png?v=6.5" alt="RED GYM">
+                    <img class="logo" src="/logo-red-gym.png?v=6.6" alt="RED GYM">
                     <h2>GIMNASIO RED GYM</h2>
                     <p class="muted small">Ingresa con tu cuenta de administrador o recepción para descargar o compartir carnets QR</p>
                   </div>
@@ -1004,7 +1004,7 @@
             <div class="pvc-card">
               <div class="card-top">
                 <div class="card-logo">
-                  <img src="/logo-red-gym.png?v=6.5" alt="RED GYM">
+                  <img src="/logo-red-gym.png?v=6.6" alt="RED GYM">
                   <div>
                     <div class="brand-txt">${RD.esc(gym.gym_name || 'GIMNASIO RED GYM')}</div>
                     <div class="slogan">${RD.esc(gym.gym_slogan || 'Fuerza · Pasión · Resultados')}</div>
@@ -1036,7 +1036,7 @@
             const back = `
             <div class="pvc-card back">
               <div class="card-logo" style="justify-content:center;margin-bottom:4px">
-                <img src="/logo-red-gym.png?v=6.5" style="height:24px;width:24px" alt="RED GYM">
+                <img src="/logo-red-gym.png?v=6.6" style="height:24px;width:24px" alt="RED GYM">
                 <div class="brand-txt">${RD.esc(gym.gym_name || 'GIMNASIO RED GYM')}</div>
               </div>
               <div class="back-rules">

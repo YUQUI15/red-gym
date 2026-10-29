@@ -1,4 +1,4 @@
-# Tu Gimnasio (Marca Propia) a Escala Real: Mostrador de Recepción ➔ Techo CCTV (+3.2m) ➔ Rack 19" ➔ Smart TV 55" PiP
+# GIMNASIO RED GYM a Escala Real: Mostrador de Recepción ➔ Techo CCTV (+3.2m) ➔ Rack 19" ➔ Smart TV 55" PiP
 
 _Simulador Espacial y Anatómico 3D v3.0 • Ambientes Reales, Proporción Física Exacta, Boletas #000 y Smart TV con Cámaras + Publicidad Rotativa_
 
@@ -41,30 +41,30 @@ flowchart LR
 
 ## Fichas de equipo
 
-### 1. Smartphone del Socio con Carné Digital QR (o Tarjeta PVC Tu Gimnasio)
+### 1. Smartphone del Socio con Carné Digital QR (o Tarjeta PVC GIMNASIO RED GYM)
 
 > **Ubicación:** Mostrador de Recepción • Zona de Ingreso de Socios (z = +10) · **Dimensiones Reales:** 7.6 × 15.8 × 0.8 cm (Smartphone OLED / Carné PVC)
 
-Teléfono del socio presentado frente al lector en la esquina de acceso del mostrador de recepción (z = +10). Sus dimensiones físicas reales (7.6 × 15.8 cm) son las más compactas de la escena, mostrando en pantalla el Carné Digital con código QR y sello de agua de Tu Gimnasio (Marca Propia).
+Teléfono del socio presentado frente al lector en la esquina de acceso del mostrador de recepción (z = +10). Sus dimensiones físicas reales (7.6 × 15.8 cm) son las más compactas de la escena, mostrando en pantalla el Carné Digital con código QR y sello de agua de GIMNASIO RED GYM.
 
 | Especificación | Valor |
 |---|---|
 | Ubicación Física | Mostrador Recepción • Esquina Acceso (z = +10) |
 | Dimensiones Reales | 7.6 × 15.8 × 0.8 cm (Escala 1:1) |
 | Formato Credencial | Carné Digital PWA (`/`) o Tarjeta PVC Física |
-| Modo Offline | Service Worker `gym-v4.3` (abre sin internet) |
+| Modo Offline | Service Worker `rg-v6.6` (abre sin internet) |
 
 **Anatomía interna**
 
-- **Placa Lógica Smartphone ARM64** — Ejecuta la PWA de Tu Gimnasio (Marca Propia) con estadísticas, rutinas y carné QR.
+- **Placa Lógica Smartphone ARM64** — Ejecuta la PWA de GIMNASIO RED GYM con estadísticas, rutinas y carné QR.
 - **Controlador Display AMOLED & Brillo** — Renderiza el vector SVG del código QR con bordes nítidos (`crispEdges`).
-- **Motor de Token QR (`GYMPRO:Mxxxx`)** — Genera la credencial única vinculada al DNI y vigencia del socio.
-- **Caché Offline Service Worker (`gym-v4.3`)** — Permite abrir el carné QR en la puerta del gimnasio incluso sin señal móvil.
+- **Motor de Token QR (`REDGYM:Mxxxx`)** — Genera la credencial única vinculada al DNI y vigencia del socio.
+- **Caché Offline Service Worker (`rg-v6.6`)** — Permite abrir el carné QR en la puerta del gimnasio incluso sin señal móvil.
 - **Batería Polímero de Litio 5000 mAh** — Suministro energético regulado del teléfono.
 
 **Proceso interno**
 
-1. **Apertura Instantánea del Carné PWA** — El socio abre su carné digital de Tu Gimnasio (Marca Propia) (con o sin internet).
+1. **Apertura Instantánea del Carné PWA** — El socio abre su carné digital de GIMNASIO RED GYM (con o sin internet).
 2. **Despliegue de Código QR Oficial** — Se muestra el código QR de alto contraste con marca de agua del gimnasio.
 3. **Presentación frente al Escáner 2D** — El socio acerca su pantalla a 10 cm del lector manos libres sobre el mostrador.
 
@@ -87,7 +87,7 @@ Escáner óptico 2D Imager de presentación ubicado sobre el mostrador de recepc
 - **Sensor CMOS Megapíxel 1280×800 (60 fps)** — Captura 60 imágenes por segundo sin importar si la pantalla tiene 15% de brillo.
 - **Lente Asférico Antirreflejo Celulares** — Suprime reflejos especulares en micas de vidrio templado.
 - **Matriz Iluminación Blanca Cálida** — Ilumina códigos QR impresos o en pantalla sin encandilar.
-- **Chip ASIC Decodificador Reed-Solomon** — Reconstruye el código `GYMPRO:SOCIO` en menos de 100 milisegundos.
+- **Chip ASIC Decodificador Reed-Solomon** — Reconstruye el código `REDGYM:SOCIO` en menos de 100 milisegundos.
 - **Buzzer Piezoeléctrico 85 dB & USB-HID** — Emite el beep de confirmación y envía la ráfaga USB con tecla ENTER.
 
 **Proceso interno**
@@ -260,7 +260,7 @@ Gran pantalla panorámica vertical de 55 pulgadas (123.2 × 71.4 cm) instalada e
 1. **Estado Base (90%): 4 Cámaras CCTV a Pantalla Completa** — Muestra en vivo las 4 cámaras de seguridad del gimnasio a pantalla completa.
 2. **Reducción Automática de Cámaras a Esquina PiP** — Cuando ocurre un evento importante o toca publicidad, las cámaras pasan a la ventana PiP.
 3. **Proyección Prioritaria: Bienvenida QR / Cobro Yape (5.5s)** — Despliega los datos del socio o el código QR de Yape/Plin con sonido y luego restaura las cámaras.
-4. **Spot Publicitario Programado (16s cada 3 min)** — Anuncia los planes y promociones de Tu Gimnasio (Marca Propia) manteniendo las cámaras visibles en PiP.
+4. **Spot Publicitario Programado (16s cada 3 min)** — Anuncia los planes y promociones de GIMNASIO RED GYM manteniendo las cámaras visibles en PiP.
 
 | Puerto | Tipo | Cable | Conectado a |
 |---|---|---|---|
@@ -318,7 +318,7 @@ _Duración simulada: 14.9s_
 
 1. **Carné QR del Socio** (member_phone) — El socio acerca la pantalla de su celular (o tarjeta PVC) a la esquina del mostrador de recepción.
 2. **Óptico 2D 60fps (0.1s)** (opt_qr_beam) — El lector 2D captura el código QR en 0.1 segundos sin importar si la pantalla tiene brillo bajo o vidrio templado.
-3. **Decodificación ASIC** (scanner_2d) — El chip ASIC decodifica `GYMPRO:SOCIO`, enciende el LED verde, emite el beep y lo envía por USB-HID.
+3. **Decodificación ASIC** (scanner_2d) — El chip ASIC decodifica `REDGYM:SOCIO`, enciende el LED verde, emite el beep y lo envía por USB-HID.
 4. **Cable USB-HID Mostrador** (c_scan_pc) — La lectura viaja sobre el escritorio hacia la Mini PC de recepción.
 5. **Validación + Evento SSE** (minipc_pos) — La Mini PC verifica la vigencia del socio en <2 ms, registra la asistencia y lanza el evento `welcome` hacia la Smart TV.
 6. **Cable HDMI 2.0 a Sala Principal** (c_pc_tv) — La señal viaja desde el mostrador hasta la Smart TV de 55" en el muro principal del gimnasio.
@@ -345,7 +345,7 @@ _Duración simulada: 14.9s_
 4. **Stream USB 3.0 UVC 1080p60** (c_dvr_pc) — El flujo de las 4 cámaras llega a la Mini PC para integrarse en `/display.html`.
 5. **Bus HDMI Directo CCTV** (dvr_capture) — Canal HDMI directo de respaldo hacia la pantalla principal.
 6. **Enlace HDMI a Muro Principal** (c_dvr_tv) — Transmisión continua hacia la Smart TV de 55 pulgadas.
-7. **Spot Publicitario 16s + CCTV PiP** (smart_tv_55) — Cada 3 minutos la Smart TV proyecta durante 16 segundos el Spot Publicitario de Tu Gimnasio (Marca Propia) (manteniendo las cámaras en la esquina PiP) y luego regresa a las 4 cámaras a pantalla completa.
+7. **Spot Publicitario 16s + CCTV PiP** (smart_tv_55) — Cada 3 minutos la Smart TV proyecta durante 16 segundos el Spot Publicitario de GIMNASIO RED GYM (manteniendo las cámaras en la esquina PiP) y luego regresa a las 4 cámaras a pantalla completa.
 
 ## Resultado de auditoría
 

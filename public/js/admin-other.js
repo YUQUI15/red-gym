@@ -1780,7 +1780,137 @@
         </div>
       `, { wide: true });
 
-      d.el.querySelector('#btnprintsheet')?.addEventListener('click', () => window.print());
+      d.el.querySelector('#btnprintsheet')?.addEventListener('click', () => {
+        RD.printExecutiveDocument({
+          gym: { name: set.gym_name || 'GIMNASIO RED GYM', slogan: set.gym_slogan, address: RD.cleanAddress(set.gym_address), phone: set.gym_phone, ruc: set.gym_ruc },
+          docType: 'FICHA OFICIAL DE SOCIO Y ASISTENCIA',
+          docCode: `${m.code || 'SOC'}-${to.replace(/-/g, '')}`,
+          title: `Ficha Integral de Socio: ${m.name}`,
+          subtitle: 'Auditoría correlacionada de membresía, asistencias, horarios, rutina deportiva y récords personales',
+          period: `${from} al ${to}`,
+          fileName: `Ficha_Socio_${(m.code || m.name || 'Socio').replace(/\s+/g, '_')}_${to}`,
+          bodyHtml: `
+            <div class="doc-section">
+              <div class="doc-sec-title">I. Datos Filiatorios y Estado de Membresía</div>
+              <div class="doc-grid-2">
+                <div class="doc-box">
+                  <h4>Identificación del Atleta / Socio</h4>
+                  <table class="doc-table" style="margin:0">
+                    <tbody>
+                      <tr><td><b>Nombre Completo:</b></td><td><b>${esc(m.name)}</b></td></tr>
+                      <tr><td><b>DNI / Código:</b></td><td class="t-mono">${esc(m.dni || '—')} · <b>${esc(m.code)}</b></td></tr>
+                      <tr><td><b>Teléfono / Celular:</b></td><td>${esc(m.phone || '—')}</td></tr>
+                      <tr><td><b>Fecha de Inscripción:</b></td><td>${RD.fmtDate(m.created_at)} · Horario pref.: <b>${esc(s.preferredSchedule || 'Variable')}</b></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="doc-box">
+                  <h4>Situación Contractual y Plan</h4>
+                  <table class="doc-table" style="margin:0">
+                    <tbody>
+                      <tr><td><b>Plan Contratado:</b></td><td><b>${esc(m.current_plan || 'Sin plan activo')}</b></td></tr>
+                      <tr><td><b>Vigencia del Plan:</b></td><td>${m.start_date ? RD.fmtDate(m.start_date) : '—'} al ${m.end_date ? RD.fmtDate(m.end_date) : '—'}</td></tr>
+                      <tr><td><b>Estado Operativo:</b></td><td><span class="doc-badge ${m.status === 'active' ? 'ok' : 'bad'}">${m.status === 'active' ? 'SOCIO ACTIVO' : 'INACTIVO / VENCIDO'}</span></td></tr>
+                      <tr><td><b>Rutina Asignada:</b></td><td>${esc(routine ? `${routine.name} (${routine.days_per_week || 4} d/sem)` : 'Entrenamiento libre')}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-sec-title">II. Indicadores de Disciplina, Constancia y Rendimiento Físico</div>
+              <div class="doc-kpis">
+                <div class="doc-kpi accent">
+                  <div class="k-lbl">Días Asistidos</div>
+                  <div class="k-val">${s.daysAttended || 0} días</div>
+                  <div class="k-sub">${s.totalSessions || 0} sesiones en el período</div>
+                </div>
+                <div class="doc-kpi">
+                  <div class="k-lbl">Tiempo Total en Sala</div>
+                  <div class="k-val">${s.totalHours || 0} hrs</div>
+                  <div class="k-sub">Permanencia acumulada</div>
+                </div>
+                <div class="doc-kpi">
+                  <div class="k-lbl">Frecuencia Semanal</div>
+                  <div class="k-val">${s.avgDaysPerWeek || 0} d/sem</div>
+                  <div class="k-sub">${s.consistencyRate || 0}% índice de constancia</div>
+                </div>
+                <div class="doc-kpi">
+                  <div class="k-lbl">Volumen Deportivo</div>
+                  <div class="k-val">${Number(s.volumeMoved || 0).toLocaleString('es-PE')} kg</div>
+                  <div class="k-sub">${s.workoutsLogged || 0} entrenamientos reg.</div>
+                </div>
+              </div>
+
+              ${(topPrs.length || meas) ? `
+              <div class="doc-grid-2">
+                <div class="doc-box">
+                  <h4>Top Récords Personales (PRs)</h4>
+                  ${topPrs.length ? `
+                    <table class="doc-table" style="margin:0">
+                      <thead><tr><th>Ejercicio</th><th class="t-right">Marca Máxima</th></tr></thead>
+                      <tbody>
+                        ${topPrs.slice(0, 4).map(pr => `<tr><td>${esc(pr.exercise)}</td><td class="t-right"><b>${pr.weight_kg} kg × ${pr.reps} reps</b></td></tr>`).join('')}
+                      </tbody>
+                    </table>
+                  ` : `<div style="font-size:8pt;color:#64748b">Sin récords personales registrados en este período.</div>`}
+                </div>
+                <div class="doc-box">
+                  <h4>Último Control Antropométrico</h4>
+                  ${meas ? `
+                    <table class="doc-table" style="margin:0">
+                      <tbody>
+                        <tr><td><b>Peso Corporal:</b></td><td class="t-right"><b>${meas.weight_kg || '—'} kg</b></td></tr>
+                        <tr><td><b>Perímetro Cintura:</b></td><td class="t-right">${meas.waist_cm || '—'} cm</td></tr>
+                        <tr><td><b>Porcentaje Grasa:</b></td><td class="t-right">${meas.body_fat_pct ? meas.body_fat_pct + '%' : '—'} (Fecha: ${meas.day})</td></tr>
+                      </tbody>
+                    </table>
+                  ` : `<div style="font-size:8pt;color:#64748b">Sin mediciones antropométricas registradas.</div>`}
+                </div>
+              </div>` : ''}
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-sec-title">III. Registro Cronológico de Sesiones (Entradas, Salidas y Permanencia)</div>
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th style="width:32px" class="t-center">#</th>
+                    <th>Fecha</th>
+                    <th>Hora Entrada</th>
+                    <th>Hora Salida</th>
+                    <th>Permanencia</th>
+                    <th>Registrado Por</th>
+                    <th class="t-center">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${recs.length ? recs.map((r, i) => {
+                    const enterTime = r.ts ? new Date(r.ts).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '—';
+                    const exitTime = r.exit_ts ? new Date(r.exit_ts).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : (r.status === 'inside' ? 'En Sala' : '—');
+                    const duration = r.duration_min ? `${Math.floor(r.duration_min / 60) > 0 ? Math.floor(r.duration_min / 60) + 'h ' : ''}${r.duration_min % 60}m` : (r.status === 'inside' ? 'Entrenando' : '—');
+                    return `
+                      <tr>
+                        <td class="t-center">${i + 1}</td>
+                        <td><b>${esc(r.day)}</b></td>
+                        <td class="t-mono">${esc(enterTime)}</td>
+                        <td class="t-mono">${esc(exitTime)}</td>
+                        <td><b>${esc(duration)}</b></td>
+                        <td>${esc(r.staff_name || 'Recepción')}</td>
+                        <td class="t-center"><span class="doc-badge ${r.result === 'ok' ? 'ok' : r.result === 'warn' ? 'warn' : 'bad'}">${r.result === 'ok' ? 'VÁLIDO' : r.result === 'warn' ? 'AVISO' : 'RECHAZADO'}</span></td>
+                      </tr>`;
+                  }).join('') : `<tr><td colspan="7" class="t-center" style="padding:14px;color:#64748b">No se registran asistencias en el período seleccionado (${from} al ${to}).</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          `,
+          signatures: [
+            { title: 'CONFORMIDAD DEL SOCIO / ATLETA', name: m.name, sub: `DNI: ${m.dni || '—'} · Cód: ${m.code || ''}` },
+            { title: 'CERTIFICACIÓN ADMINISTRATIVA', name: 'Administración y Control de Accesos', sub: set.gym_name || 'GIMNASIO RED GYM' }
+          ]
+        });
+      });
     } catch (err) {
       RD.toast(err.message, 'err');
     }
@@ -1928,7 +2058,7 @@ function poblarHoja(ss, name, headers, rows, types) {
   var headerRange = sheet.getRange(1, 1, 1, numCols);
   headerRange.setFontWeight('bold')
     .setBackground('#111827')
-    .setFontColor('#f59e0b')
+    .setFontColor('#ef4444')
     .setHorizontalAlignment('center');
   sheet.setFrozenRows(1);
   
@@ -1974,7 +2104,7 @@ function poblarDashboard(ss, ds) {
   // Banner principal
   sheet.getRange('A1:L1').merge()
     .setValue('GIMNASIO RED GYM - CHIVAY  |  DASHBOARD EJECUTIVO EN TIEMPO REAL')
-    .setFontWeight('bold').setFontSize(14).setBackground('#111827').setFontColor('#f59e0b')
+    .setFontWeight('bold').setFontSize(14).setBackground('#111827').setFontColor('#ef4444')
     .setHorizontalAlignment('center');
     
   sheet.getRange('A2:L2').merge()
@@ -1985,9 +2115,9 @@ function poblarDashboard(ss, ds) {
   // Tarjetas KPI fila 4 a 5
   var kpis = [
     ['INGRESO TOTAL', 'S/ ' + (k.ingresos || 0).toFixed(2), '#10b981'],
-    ['GIMNASIO', 'S/ ' + (k.gimnasio || 0).toFixed(2), '#f59e0b'],
+    ['GIMNASIO', 'S/ ' + (k.gimnasio || 0).toFixed(2), '#ef4444'],
     ['TIENDITA', 'S/ ' + (k.tienda || 0).toFixed(2), '#3b82f6'],
-    ['GASTOS OPERATIVOS', 'S/ ' + (k.gastos || 0).toFixed(2), '#ef4444'],
+    ['GASTOS OPERATIVOS', 'S/ ' + (k.gastos || 0).toFixed(2), '#f97316'],
     ['UTILIDAD NETA', 'S/ ' + (k.utilidad || 0).toFixed(2), '#10b981'],
     ['EFECTIVO EN GAVETA', 'S/ ' + (k.efectivo || 0).toFixed(2), '#6366f1']
   ];
@@ -2002,7 +2132,7 @@ function poblarDashboard(ss, ds) {
 
   // Tarjetas KPI fila 7 a 8 (Asistencias y Socios)
   var kpis2 = [
-    ['ENTRADAS TOTALES', (k.visitas || 0) + ' visitas', '#f59e0b'],
+    ['ENTRADAS TOTALES', (k.visitas || 0) + ' visitas', '#ef4444'],
     ['SALIDAS REGISTRADAS', ((k.visitas || 0) - (k.sin_salida || 0)) + ' salidas', '#10b981'],
     ['SIN SALIDA REGISTRADA', (k.sin_salida || 0) + ' (' + (k.pct_sin_salida || 0) + '%)', '#f97316'],
     ['SOCIOS VIGENTES', (k.socios_vigentes || 0) + ' activos', '#3b82f6'],
@@ -2032,7 +2162,7 @@ function poblarDashboard(ss, ds) {
         .setOption('width', 580)
         .setOption('height', 300)
         .setOption('isStacked', true)
-        .setOption('colors', ['#f59e0b', '#3b82f6'])
+        .setOption('colors', ['#ef4444', '#3b82f6'])
         .build();
       sheet.insertChart(chart1);
     }
@@ -2048,7 +2178,7 @@ function poblarDashboard(ss, ds) {
         .setOption('title', 'Afluencia por Hora: Entradas vs Salidas')
         .setOption('width', 580)
         .setOption('height', 300)
-        .setOption('colors', ['#f59e0b', '#10b981'])
+        .setOption('colors', ['#ef4444', '#10b981'])
         .build();
       sheet.insertChart(chart2);
     }
@@ -2334,7 +2464,7 @@ function verEstado() {
         };
 
         // Handlers de botones de exportación
-        view.querySelector('#btnprint').onclick = () => window.print();
+        view.querySelector('#btnprint').onclick = () => printCurrentReport(d, channel, from, to, settings);
         view.querySelector('#btngsheets').onclick = () => RD.openGoogleSheetsDirect();
         view.querySelector('#btngsheets_guide').onclick = () => googleSheetsSyncModal(settings);
         view.querySelector('#btnexcel').onclick = async () => {
@@ -2352,6 +2482,528 @@ function verEstado() {
             btn.innerHTML = old;
           }
         };
+      }
+
+      // ---------------- GENERADOR DE REPORTES EJECUTIVOS A4 AISLADOS (CERO HOJAS EN BLANCO) ----------------
+      function printCurrentReport(d, ch, rFrom, rTo, cfg) {
+        if (ch === 'security') {
+          const certBtn = view.querySelector('#btnprintcertificate');
+          if (certBtn) { certBtn.click(); return; }
+          RD.toast('Primero busca y selecciona una persona para imprimir su Constancia Oficial.', 'info');
+          return;
+        }
+
+        const c = d.consolidated || {};
+        const g = d.gym || {};
+        const s = d.store || {};
+        const att = d.attendance || {};
+        const methodsOrder = ['efectivo', 'yape', 'plin', 'tarjeta', 'transferencia'];
+        const methodLabels = { efectivo: 'Efectivo Físico (Caja)', yape: 'Yape (QR / Celular)', plin: 'Plin', tarjeta: 'Tarjeta POS', transferencia: 'Transferencia Bancaria' };
+
+        if (ch === 'consolidated') {
+          const daily = c.dailyComparison || [];
+          const gymByMethod = c.gymByMethod || {};
+          const storeByMethod = c.storeByMethod || {};
+          const totalByMethod = c.totalByMethod || {};
+          const expCat = c.expensesByCat || d.expenses?.byCat || [];
+          const yapeAudit = c.yapeAudit || { totalCount: 0, verifiedCount: 0, pendingCount: 0, pendingAmount: 0 };
+          const totIncome = Number(c.totalIncome || 0);
+
+          const bodyHtml = `
+            <div class="doc-section">
+              <div class="doc-section-title">I. Resumen Ejecutivo de Indicadores Financieros</div>
+              <div class="kpi-grid kpi-4">
+                <div class="kpi-box"><div class="kpi-val accent">${money(c.totalIncome || 0)}</div><div class="kpi-lbl">Ingresos Brutos Totales</div></div>
+                <div class="kpi-box"><div class="kpi-val ok">${money(c.netProfit || 0)}</div><div class="kpi-lbl">Utilidad Operativa Neta</div></div>
+                <div class="kpi-box"><div class="kpi-val">${money(c.cashOnHand || 0)}</div><div class="kpi-lbl">Efectivo Físico Neto</div></div>
+                <div class="kpi-box"><div class="kpi-val">${money(c.digitalTotal || 0)}</div><div class="kpi-lbl">Recaudación Digital (Yape/Plin/POS)</div></div>
+              </div>
+              <div class="meta-grid">
+                <div class="meta-item"><span class="lbl">Ingresos Caja Gimnasio:</span><span class="val">${money(c.totalGymIncome || 0)} (${totIncome > 0 ? Math.round((Number(c.totalGymIncome || 0) / totIncome) * 100) : 0}%)</span></div>
+                <div class="meta-item"><span class="lbl">Ingresos Tiendita / POS:</span><span class="val">${money(c.totalStoreIncome || 0)} (${totIncome > 0 ? Math.round((Number(c.totalStoreIncome || 0) / totIncome) * 100) : 0}%)</span></div>
+                <div class="meta-item"><span class="lbl">Total Egresos Operativos:</span><span class="val">-${money(c.totalExpense || 0)}</span></div>
+                <div class="meta-item"><span class="lbl">Auditoría Yape / Plin:</span><span class="val">${yapeAudit.verifiedCount}/${yapeAudit.totalCount} verificados (${yapeAudit.pendingCount} pend.)</span></div>
+                <div class="meta-item"><span class="lbl">Altas / Renovaciones:</span><span class="val">${d.newMembers || 0} nuevos / ${d.renewals || 0} renovaciones</span></div>
+                <div class="meta-item"><span class="lbl">Asistencias del Período:</span><span class="val">${att.totalVisits || 0} visitas registradas</span></div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-section-title">II. Matriz Cruzada de Conciliación: Método de Pago × Unidad de Negocio</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Método de Pago</th>
+                    <th class="num">Caja Gimnasio</th>
+                    <th class="num">Tiendita y POS</th>
+                    <th class="num">Total Recaudado</th>
+                    <th class="num">% Participación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${methodsOrder.map(m => {
+                    const gVal = Number(gymByMethod[m] || 0);
+                    const sVal = Number(storeByMethod[m] || 0);
+                    const tVal = Number(totalByMethod[m] || (gVal + sVal));
+                    const pct = totIncome > 0 ? Math.round((tVal / totIncome) * 100) : 0;
+                    return `<tr>
+                      <td><b>${esc(methodLabels[m] || m)}</b></td>
+                      <td class="num">${money(gVal)}</td>
+                      <td class="num">${money(sVal)}</td>
+                      <td class="num"><b>${money(tVal)}</b></td>
+                      <td class="num">${pct}%</td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td>TOTAL CONCILIADO</td>
+                    <td class="num">${money(c.totalGymIncome || 0)}</td>
+                    <td class="num">${money(c.totalStoreIncome || 0)}</td>
+                    <td class="num">${money(c.totalIncome || 0)}</td>
+                    <td class="num">100%</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            ${expCat.length ? `
+            <div class="doc-section">
+              <div class="doc-section-title">III. Desglose de Gastos y Egresos Operativos por Categoría</div>
+              <table>
+                <thead><tr><th>Categoría de Gasto</th><th class="num">Total Egresado</th><th class="num">% sobre Egresos</th></tr></thead>
+                <tbody>
+                  ${expCat.map(e => `<tr>
+                    <td><b>${esc((e.category || 'Otros').toUpperCase())}</b></td>
+                    <td class="num">-${money(e.total || 0)}</td>
+                    <td class="num">${(c.totalExpense || 0) > 0 ? Math.round(((e.total || 0) / c.totalExpense) * 100) : 0}%</td>
+                  </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>` : ''}
+
+            <div class="doc-section">
+              <div class="doc-section-title">${expCat.length ? 'IV' : 'III'}. Flujo de Caja Diario Comparativo (${daily.length} días con movimiento)</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th class="num">Caja Gimnasio</th>
+                    <th class="num">Tiendita / POS</th>
+                    <th class="num">Total Ingresos</th>
+                    <th class="num">Gastos</th>
+                    <th class="num">Balance Neto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${daily.map(x => `<tr>
+                    <td class="mono"><b>${esc(x.day)}</b></td>
+                    <td class="num">${money(x.gym || 0)}</td>
+                    <td class="num">${money(x.store || 0)}</td>
+                    <td class="num"><b>${money(x.total || 0)}</b></td>
+                    <td class="num">-${money(x.expense || 0)}</td>
+                    <td class="num"><b>${money(x.net || 0)}</b></td>
+                  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:12px;">Sin movimientos registrados en este período.</td></tr>'}
+                </tbody>
+                ${daily.length ? `<tfoot>
+                  <tr>
+                    <td>TOTAL PERÍODO (${daily.length} días)</td>
+                    <td class="num">${money(c.totalGymIncome || 0)}</td>
+                    <td class="num">${money(c.totalStoreIncome || 0)}</td>
+                    <td class="num">${money(c.totalIncome || 0)}</td>
+                    <td class="num">-${money(c.totalExpense || 0)}</td>
+                    <td class="num">${money(c.netProfit || 0)}</td>
+                  </tr>
+                </tfoot>` : ''}
+              </table>
+            </div>
+          `;
+
+          RD.printExecutiveDocument({
+            docType: 'INFORME FINANCIERO Y OPERATIVO CONSOLIDADO',
+            docCode: `REP-CONS-${rFrom.replace(/-/g, '')}-${rTo.replace(/-/g, '')}`,
+            period: `${rFrom} al ${rTo}`,
+            subtitle: `Auditoría integral de ingresos de gimnasio, punto de venta (POS), egresos operativos y flujo de caja diario`,
+            bodyHtml
+          });
+          return;
+        }
+
+        if (ch === 'gym') {
+          const payments = g.payments || [];
+          const dailyPasses = g.dailyPasses || [];
+          const byPlan = g.byPlan || [];
+          const expiringSoon = g.expiringSoon || [];
+          const dailyPassTotal = dailyPasses.reduce((a, b) => a + Number(b.price || 0), 0);
+
+          const bodyHtml = `
+            <div class="doc-section">
+              <div class="doc-section-title">I. Indicadores de Recaudación y Cartera de Gimnasio</div>
+              <div class="kpi-grid kpi-4">
+                <div class="kpi-box"><div class="kpi-val accent">${money(g.income || 0)}</div><div class="kpi-lbl">Total Recaudado Gimnasio</div></div>
+                <div class="kpi-box"><div class="kpi-val">${payments.length} cobros</div><div class="kpi-lbl">Operaciones Registradas</div></div>
+                <div class="kpi-box"><div class="kpi-val ok">${d.newMembers || 0} / ${d.renewals || 0}</div><div class="kpi-lbl">Nuevos Socios / Renovaciones</div></div>
+                <div class="kpi-box"><div class="kpi-val warn">${dailyPasses.length} (${money(dailyPassTotal)})</div><div class="kpi-lbl">Pases Diarios Emitidos</div></div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-section-title">II. Recaudación Desglosada por Tipo de Plan y Modalidad</div>
+              <table>
+                <thead><tr><th>Plan / Modalidad</th><th class="num">Cantidad</th><th class="num">Total Recaudado</th><th class="num">% Participación</th></tr></thead>
+                <tbody>
+                  ${byPlan.map(p => `<tr>
+                    <td><b>${esc(p.plan_name)}</b></td>
+                    <td class="num">${p.n} membresías</td>
+                    <td class="num"><b>${money(p.total || 0)}</b></td>
+                    <td class="num">${g.income > 0 ? Math.round(((p.total || 0) / g.income) * 100) : 0}%</td>
+                  </tr>`).join('')}
+                  <tr>
+                    <td><b>Pase Diario / Rutina Libre</b></td>
+                    <td class="num">${dailyPasses.length} pases</td>
+                    <td class="num"><b>${money(dailyPassTotal)}</b></td>
+                    <td class="num">${g.income > 0 ? Math.round((dailyPassTotal / g.income) * 100) : 0}%</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td>TOTAL CAJA GIMNASIO</td>
+                    <td class="num">${payments.length} op.</td>
+                    <td class="num">${money(g.income || 0)}</td>
+                    <td class="num">100%</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            ${expiringSoon.length ? `
+            <div class="doc-section">
+              <div class="doc-section-title">III. Cartera de Membresías Próximas a Vencer (Próximos 7 Días: ${expiringSoon.length})</div>
+              <table>
+                <thead><tr><th>Socio</th><th>Plan Activo</th><th>Fecha Vencimiento</th><th>Teléfono</th><th>Estado</th></tr></thead>
+                <tbody>
+                  ${expiringSoon.map(m => `<tr>
+                    <td><b>${esc(m.name)}</b></td>
+                    <td>${esc(m.plan_name)}</td>
+                    <td class="mono">${esc(m.end_date)}</td>
+                    <td class="mono">${esc(m.phone || '—')}</td>
+                    <td><span class="badge warn">${m.days_left === 0 ? 'Vence Hoy' : `En ${m.days_left} días`}</span></td>
+                  </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>` : ''}
+
+            <div class="doc-section">
+              <div class="doc-section-title">${expiringSoon.length ? 'IV' : 'III'}. Libro Cronológico de Cobros del Gimnasio (${payments.length} registros)</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha / Hora</th>
+                    <th>N° Boleta</th>
+                    <th>Socio / Visitante</th>
+                    <th>Concepto</th>
+                    <th>Método</th>
+                    <th>Estado</th>
+                    <th class="num">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${payments.map(p => {
+                    const isDigital = p.method === 'yape' || p.method === 'plin';
+                    const isVer = Boolean(p.verified || p.yape_verified);
+                    return `<tr>
+                      <td class="mono">${esc(p.day)} ${p.created_at ? esc(p.created_at.slice(11, 16)) : ''}</td>
+                      <td class="mono"><b>${esc(p.receipt_no || ('REC-' + p.id))}</b></td>
+                      <td><b>${esc(p.member_name || p.dp_name || 'Visitante')}</b> ${p.member_code ? `<span class="mono">(${esc(p.member_code)})</span>` : ''}</td>
+                      <td>${esc(p.concept)}</td>
+                      <td><span class="badge">${esc((p.method || '').toUpperCase())}</span></td>
+                      <td>${isDigital ? (isVer ? '<span class="badge ok">Verificado</span>' : '<span class="badge warn">Por validar</span>') : 'Caja Física'}</td>
+                      <td class="num"><b>${money(p.amount || 0)}</b></td>
+                    </tr>`;
+                  }).join('') || '<tr><td colspan="7" style="text-align:center;padding:12px;">Sin cobros registrados en este período.</td></tr>'}
+                </tbody>
+                ${payments.length ? `<tfoot>
+                  <tr>
+                    <td colspan="6">TOTAL RECAUDADO EN GIMNASIO (${payments.length} operaciones)</td>
+                    <td class="num">${money(g.income || 0)}</td>
+                  </tr>
+                </tfoot>` : ''}
+              </table>
+            </div>
+          `;
+
+          RD.printExecutiveDocument({
+            docType: 'REPORTE DE INGRESOS, MEMBRESÍAS Y RETENCIÓN DEL GIMNASIO',
+            docCode: `REP-GYM-${rFrom.replace(/-/g, '')}-${rTo.replace(/-/g, '')}`,
+            period: `${rFrom} al ${rTo}`,
+            subtitle: `Auditoría de suscripciones, pases diarios, renovaciones y libro detallado de boletas`,
+            bodyHtml
+          });
+          return;
+        }
+
+        if (ch === 'store') {
+          const prods = s.productStats || [];
+          const payments = s.payments || [];
+          const lowStock = s.lowStock || [];
+          const totalUnits = prods.reduce((a, b) => a + (b.sold_qty || 0), 0);
+
+          const bodyHtml = `
+            <div class="doc-section">
+              <div class="doc-section-title">I. Resumen Comercial de Tiendita y Punto de Venta (POS)</div>
+              <div class="kpi-grid kpi-4">
+                <div class="kpi-box"><div class="kpi-val accent">${money(s.income || 0)}</div><div class="kpi-lbl">Total Ventas Brutas POS</div></div>
+                <div class="kpi-box"><div class="kpi-val ok">${money(s.grossProfit || 0)}</div><div class="kpi-lbl">Utilidad Comercial Neta</div></div>
+                <div class="kpi-box"><div class="kpi-val">${totalUnits} unid.</div><div class="kpi-lbl">Unidades Despachadas</div></div>
+                <div class="kpi-box"><div class="kpi-val ${lowStock.length ? 'danger' : 'ok'}">${lowStock.length} ítems</div><div class="kpi-lbl">Alertas de Stock Mínimo</div></div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-section-title">II. Auditoría de Inventario, Costos Unitarios y Margen por Producto</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th class="num">Costo Unit.</th>
+                    <th class="num">P. Venta</th>
+                    <th class="num">Stock Actual</th>
+                    <th class="num">Vendidos</th>
+                    <th class="num">Venta Total</th>
+                    <th class="num">Utilidad Neta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${prods.map(p => {
+                    const cost = Number(p.cost || 0);
+                    const price = Number(p.price || 0);
+                    const soldQty = Number(p.sold_qty || 0);
+                    const soldTot = Number(p.sold_total || 0);
+                    const profit = soldTot - (soldQty * cost);
+                    return `<tr>
+                      <td><b>${esc(p.name)}</b></td>
+                      <td>${esc(p.category || 'General')}</td>
+                      <td class="num">${money(cost)}</td>
+                      <td class="num">${money(price)}</td>
+                      <td class="num"><span class="badge ${p.stock <= p.min_stock ? 'danger' : 'ok'}">${p.stock} un. (mín ${p.min_stock})</span></td>
+                      <td class="num">${soldQty} un.</td>
+                      <td class="num"><b>${money(soldTot)}</b></td>
+                      <td class="num"><b>${money(profit)}</b></td>
+                    </tr>`;
+                  }).join('') || '<tr><td colspan="8" style="text-align:center;padding:12px;">Sin productos en catálogo.</td></tr>'}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="5">TOTAL CONSOLIDADO DE INVENTARIO Y VENTAS POS</td>
+                    <td class="num">${totalUnits} un.</td>
+                    <td class="num">${money(s.income || 0)}</td>
+                    <td class="num">${money(s.grossProfit || 0)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-section-title">III. Detalle Cronológico de Tickets de Venta POS (${payments.length} ventas)</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha y Hora</th>
+                    <th>N° Boleta / Ticket</th>
+                    <th>Detalle de Productos</th>
+                    <th>Método</th>
+                    <th class="num">Importe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${payments.map(p => `<tr>
+                    <td class="mono">${esc(p.day)} ${p.created_at ? esc(p.created_at.slice(11, 16)) : ''}</td>
+                    <td class="mono"><b>${esc(p.receipt_no || ('TICK-' + p.id))}</b></td>
+                    <td><b>${esc(p.concept)}</b></td>
+                    <td><span class="badge">${esc((p.method || '').toUpperCase())}</span></td>
+                    <td class="num"><b>${money(p.amount || 0)}</b></td>
+                  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:12px;">Sin ventas registradas en este período.</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+          `;
+
+          RD.printExecutiveDocument({
+            docType: 'INFORME DE VENTAS POS, INVENTARIO Y MARGEN COMERCIAL',
+            docCode: `REP-POS-${rFrom.replace(/-/g, '')}-${rTo.replace(/-/g, '')}`,
+            period: `${rFrom} al ${rTo}`,
+            subtitle: `Control de existencias, kardex valorizado, costos de reposición y utilidad por producto`,
+            bodyHtml
+          });
+          return;
+        }
+
+        if (ch === 'shifts') {
+          const shifts = c.shifts || [];
+          const closedShifts = shifts.filter(sh => sh.status !== 'open');
+          const exactShifts = closedShifts.filter(sh => Math.abs(Number(sh.diff_cash || 0)) < 0.01).length;
+          const netDiff = closedShifts.reduce((a, b) => a + Number(b.diff_cash || 0), 0);
+          const totalExpectedCash = shifts.reduce((a, b) => a + Number(b.expected_cash || 0), 0);
+
+          const bodyHtml = `
+            <div class="doc-section">
+              <div class="doc-section-title">I. Resumen de Auditoría de Turnos y Arqueos de Caja</div>
+              <div class="kpi-grid kpi-4">
+                <div class="kpi-box"><div class="kpi-val accent">${shifts.length} turnos</div><div class="kpi-lbl">Turnos en el Período</div></div>
+                <div class="kpi-box"><div class="kpi-val ok">${exactShifts} / ${closedShifts.length}</div><div class="kpi-lbl">Cierres con Cuadre Exacto</div></div>
+                <div class="kpi-box"><div class="kpi-val">${money(totalExpectedCash)}</div><div class="kpi-lbl">Efectivo Esperado Acumulado</div></div>
+                <div class="kpi-box"><div class="kpi-val ${netDiff >= 0 ? 'ok' : 'danger'}">${netDiff >= 0 ? '+' : ''}${money(netDiff)}</div><div class="kpi-lbl">Balance Neto de Diferencias</div></div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-section-title">II. Historial Detallado de Apertura y Cierre de Turnos (${shifts.length} registros)</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Turno</th>
+                    <th>Responsable</th>
+                    <th>Horario</th>
+                    <th>Fecha</th>
+                    <th>Apertura</th>
+                    <th>Cierre</th>
+                    <th class="num">Fondo Inicial</th>
+                    <th class="num">Efec. Esperado</th>
+                    <th class="num">Efec. Contado</th>
+                    <th class="num">Diferencia</th>
+                    <th class="num">Digital</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${shifts.map(sh => {
+                    const diff = Number(sh.diff_cash || 0);
+                    return `<tr>
+                      <td class="mono"><b>#${sh.id}</b></td>
+                      <td><b>${esc(sh.user_name || sh.user_id)}</b></td>
+                      <td>${esc(sh.shift_name || 'General')}</td>
+                      <td class="mono">${esc(sh.day)}</td>
+                      <td class="mono">${sh.opened_at ? RD.fmtTime(sh.opened_at) : '—'}</td>
+                      <td class="mono">${sh.closed_at ? RD.fmtTime(sh.closed_at) : '—'}</td>
+                      <td class="num">${money(sh.initial_cash || 0)}</td>
+                      <td class="num"><b>${money(sh.expected_cash || 0)}</b></td>
+                      <td class="num"><b>${money(sh.actual_cash || 0)}</b></td>
+                      <td class="num"><span class="badge ${diff === 0 ? 'ok' : diff > 0 ? 'info' : 'danger'}">${diff >= 0 ? '+' : ''}${money(diff)}</span></td>
+                      <td class="num">${money(sh.expected_digital || 0)}</td>
+                      <td><span class="badge ${sh.status === 'open' ? 'warn' : 'ok'}">${sh.status === 'open' ? 'Abierto' : 'Cerrado'}</span></td>
+                    </tr>`;
+                  }).join('') || '<tr><td colspan="12" style="text-align:center;padding:12px;">Sin turnos registrados en este período.</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+          `;
+
+          RD.printExecutiveDocument({
+            docType: 'REPORTE DE AUDITORÍA DE TURNOS Y ARQUEOS DE CAJA',
+            docCode: `REP-TURNOS-${rFrom.replace(/-/g, '')}-${rTo.replace(/-/g, '')}`,
+            period: `${rFrom} al ${rTo}`,
+            subtitle: `Control de entregas de turno, efectivo físico declarado, recaudación digital y diferencias de caja`,
+            bodyHtml
+          });
+          return;
+        }
+
+        if (ch === 'attendance') {
+          const rows = att.rows || [];
+          const insideNow = att.insideNow || [];
+          const topMembers = att.topMembers || [];
+          const shifts = att.byShiftBlock || { morning: 0, afternoon: 0, evening: 0 };
+
+          const bodyHtml = `
+            <div class="doc-section">
+              <div class="doc-section-title">I. Indicadores de Afluencia, Permanencia y Aforo</div>
+              <div class="kpi-grid kpi-4">
+                <div class="kpi-box"><div class="kpi-val accent">${att.totalVisits || 0} visitas</div><div class="kpi-lbl">Asistencias Totales</div></div>
+                <div class="kpi-box"><div class="kpi-val ok">${att.memberVisits || 0} / ${att.dailyVisits || 0}</div><div class="kpi-lbl">Socios vs Pases Diarios</div></div>
+                <div class="kpi-box"><div class="kpi-val">${att.avgDurationMin || 75} min</div><div class="kpi-lbl">Permanencia Promedio</div></div>
+                <div class="kpi-box"><div class="kpi-val">${shifts.morning || 0}M · ${shifts.afternoon || 0}T · ${shifts.evening || 0}N</div><div class="kpi-lbl">Distribución por Turnos</div></div>
+              </div>
+            </div>
+
+            ${topMembers.length ? `
+            <div class="doc-section">
+              <div class="doc-section-title">II. Ranking de Socios Más Constantes del Período (Top ${topMembers.length})</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Puesto</th>
+                    <th>Socio</th>
+                    <th>Código / DNI</th>
+                    <th>Rutina Asignada</th>
+                    <th class="num">Días Asistidos</th>
+                    <th class="num">Sesiones</th>
+                    <th class="num">Promedio / Sesión</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${topMembers.map((m, idx) => `<tr>
+                    <td class="mono"><b>#${idx + 1}</b></td>
+                    <td><b>${esc(m.name)}</b></td>
+                    <td class="mono">${esc(m.code)} ${m.dni ? '· DNI ' + esc(m.dni) : ''}</td>
+                    <td>${esc(m.active_routine || 'Entrenamiento Libre')}</td>
+                    <td class="num"><b>${m.days_attended} días</b></td>
+                    <td class="num">${m.total_sessions} ses.</td>
+                    <td class="num">${m.avg_min || 75} min</td>
+                  </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>` : ''}
+
+            <div class="doc-section">
+              <div class="doc-section-title">${topMembers.length ? 'III' : 'II'}. Padrón Cronológico de Entradas, Salidas y Permanencia (${rows.length} registros)</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Entrada</th>
+                    <th>Salida</th>
+                    <th>Estancia</th>
+                    <th>Condición</th>
+                    <th>Socio / Visitante</th>
+                    <th>Código / DNI</th>
+                    <th>Resultado</th>
+                    <th>Recepción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows.map(r => {
+                    const displayName = r.member_name || r.dp_name || 'Visitante';
+                    const displayDni = r.member_dni || r.dp_dni || '—';
+                    const displayCode = r.member_code || r.dp_code || r.code || '—';
+                    const enterTime = r.ts ? new Date(r.ts).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '—';
+                    const exitTime = r.exit_ts ? new Date(r.exit_ts).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : (r.status === 'inside' ? 'En Sala' : '—');
+                    const duration = r.duration_min ? `${Math.floor(r.duration_min / 60) > 0 ? Math.floor(r.duration_min / 60) + 'h ' : ''}${r.duration_min % 60}m` : '—';
+                    return `<tr>
+                      <td class="mono">${esc(r.day)}</td>
+                      <td class="mono"><b>${esc(enterTime)}</b></td>
+                      <td class="mono">${esc(exitTime)}</td>
+                      <td class="mono">${esc(duration)}</td>
+                      <td><span class="badge ${r.kind === 'D' ? 'warn' : 'ok'}">${r.kind === 'D' ? 'Pase Diario' : 'Socio'}</span></td>
+                      <td><b>${esc(displayName)}</b></td>
+                      <td class="mono">${esc(displayCode)} ${displayDni !== '—' ? '/ ' + esc(displayDni) : ''}</td>
+                      <td><span class="badge ${r.result === 'ok' ? 'ok' : 'danger'}">${r.result === 'ok' ? 'Autorizado' : esc(r.result)}</span></td>
+                      <td>${esc(r.staff_name || 'Recepción')}</td>
+                    </tr>`;
+                  }).join('') || '<tr><td colspan="9" style="text-align:center;padding:12px;">Sin registros de asistencia en este período.</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+          `;
+
+          RD.printExecutiveDocument({
+            docType: 'REPORTE OFICIAL DE ASISTENCIAS, HORARIOS Y PERMANENCIA',
+            docCode: `REP-ASIS-${rFrom.replace(/-/g, '')}-${rTo.replace(/-/g, '')}`,
+            period: `${rFrom} al ${rTo}`,
+            subtitle: `Control de aforo, ranking de disciplina deportiva y bitácora de ingresos QR/DNI`,
+            bodyHtml
+          });
+        }
       }
 
       // ---------------- 1. CANAL CONSOLIDADO GENERAL ----------------
@@ -3621,7 +4273,65 @@ function verEstado() {
           </div>`;
 
           vContainer.querySelector('#btnprintcertificate')?.addEventListener('click', () => {
-            window.print();
+            const certBody = `
+              <div class="doc-section">
+                <div class="doc-section-title">I. Dictamen Oficial de Verificación de Presencia Física</div>
+                <div style="padding:14px 16px; border:2px solid ${isPresent ? '#16a34a' : '#dc2626'}; background:${isPresent ? '#f0fdf4' : '#fef2f2'}; border-radius:8px; margin-bottom:14px;">
+                  <div style="font-size:11pt; font-weight:900; color:${isPresent ? '#15803d' : '#b91c1c'}; margin-bottom:4px;">
+                    ${isPresent ? '✓ DICTAMEN: ASISTENCIA Y PRESENCIA FÍSICA CONFIRMADA' : '✕ DICTAMEN: NO SE REGISTRA INGRESO EN LA FECHA CONSULTADA'}
+                  </div>
+                  <div style="font-size:9.5pt; color:#0f172a; line-height:1.45;">${esc(pres.summary)}</div>
+                  <div style="font-size:8pt; color:#475569; margin-top:6px;">
+                    Fecha Auditada: <b>${esc(checkDay)}</b> · Hora Oficial de Certificación: <b>${new Date().toLocaleString('es-PE')} (Hora de Lima - Perú)</b>
+                  </div>
+                </div>
+                <div class="meta-grid">
+                  <div class="meta-item"><span class="lbl">Nombre Completo:</span><span class="val">${esc(p.name)}</span></div>
+                  <div class="meta-item"><span class="lbl">Documento DNI / CE:</span><span class="val">${esc(p.dni || 'Sin DNI')}</span></div>
+                  <div class="meta-item"><span class="lbl">Código de Registro:</span><span class="val">${esc(p.code)}</span></div>
+                  <div class="meta-item"><span class="lbl">Condición / Plan:</span><span class="val">${esc(p.type)} ${p.plan ? '— ' + esc(p.plan) : ''}</span></div>
+                  <div class="meta-item"><span class="lbl">Visitas (Últimos 30d):</span><span class="val">${stats.daysAttended || 0} días (${stats.totalSessions || 0} sesiones)</span></div>
+                  <div class="meta-item"><span class="lbl">Estancia Promedio:</span><span class="val">${stats.avgMinutes || 0} min por sesión</span></div>
+                </div>
+              </div>
+
+              <div class="doc-section">
+                <div class="doc-section-title">II. Bitácora Inmutable de Accesos en la Fecha Consultada (${esc(checkDay)})</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Hora Entrada</th>
+                      <th>Hora Salida</th>
+                      <th>Tiempo Permanencia</th>
+                      <th>Estado de Sesión</th>
+                      <th>Registrado Por</th>
+                      <th>Resultado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${sessions.length ? sessions.map(s => `<tr>
+                      <td class="mono"><b>${esc(s.day)}</b></td>
+                      <td class="mono"><b>${esc(s.entrada || '—')}</b></td>
+                      <td class="mono">${esc(s.salida || 'Sin registrar')}</td>
+                      <td class="mono"><b>${s.dur ? `${Math.floor(s.dur / 60) > 0 ? Math.floor(s.dur / 60) + 'h ' : ''}${s.dur % 60}m` : '—'}</b></td>
+                      <td>${esc(s.estado)}</td>
+                      <td>${esc(s.staff || 'Recepción')}</td>
+                      <td><span class="badge ${s.result === 'ok' ? 'ok' : 'danger'}">${esc((s.result || 'ok').toUpperCase())}</span></td>
+                    </tr>`).join('') : `<tr><td colspan="7" style="text-align:center;padding:12px;">No existe ningún registro de ingreso ni intento de acceso en la fecha consultada (${esc(checkDay)}).</td></tr>`}
+                  </tbody>
+                </table>
+              </div>
+            `;
+
+            RD.printExecutiveDocument({
+              docType: 'CONSTANCIA OFICIAL DE VERIFICACIÓN DE PRESENCIA Y AUDITORÍA DE ACCESOS',
+              docCode: `CERT-PRES-${p.code || 'DOC'}-${checkDay.replace(/-/g, '')}`,
+              period: `Fecha Auditada: ${checkDay}`,
+              subtitle: `Certificación emitida a partir del registro biométrico/QR inmutable con sello de tiempo SQLite WAL`,
+              bodyHtml: certBody,
+              signatures: ['Firma y Sello — Administración General', 'Sello de Auditoría y Control de Accesos', 'Firma del Interesado / Solicitante']
+            });
           });
         }
       }
@@ -4094,24 +4804,36 @@ function verEstado() {
         </div>
       </div>
 
-      <!-- TARJETA: HERRAMIENTAS ADICIONALES, SMART TV CCTV Y ANATOMÍA 3D -->
+      <!-- TARJETA: HERRAMIENTAS ADICIONALES, DOSSIERS COMERCIALES, SMART TV CCTV Y ANATOMÍA 3D -->
       <div class="card">
-        <h3 style="margin-bottom:0.5rem;">${RD.icon('printer')} Herramientas de Recepción, Smart TV CCTV y Arquitectura 3D</h3>
+        <h3 style="margin-bottom:0.5rem;">${RD.icon('printer')} Herramientas de Recepción, Dossiers Ejecutivos, Smart TV CCTV y Arquitectura 3D</h3>
         <p class="small muted" style="margin-bottom:0.85rem;">
-          Accede en 1 clic a la pantalla para la Smart TV del gimnasio (Cámaras CCTV 24/7 + Picture-in-Picture + Bienvenidas QR + Spot Publicitario), al diseñador de carnés PVC y a la Máquina Interactiva 3D (Anatomy3D v2.0) con el despiece de equipos y conexiones.
+          Accede en 1 clic a la pantalla para la Smart TV del gimnasio (Cámaras CCTV 24/7 + Bienvenidas QR), a los Dossiers de Propuesta Comercial e Ingeniería (Web y PDF Oficial), a las Máquinas Interactivas 3D (Anatomy3D Estándar y Pro), al Plano Técnico BOM y al Estudio de Tarjetas PVC.
         </p>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <a class="btn primary" href="/display.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-            ${RD.icon('qr')} Abrir Smart TV + Cámaras CCTV (/display.html)
-          </a>
-          <a class="btn" href="/anatomy/index.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; border-color:rgba(39,230,255,0.45); color:#27e6ff;">
-            ${RD.icon('activity')} Máquina Interactiva 3D (Anatomy3D v2.0)
-          </a>
-          <a class="btn" href="/anatomy/report.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-            ${RD.icon('file-text')} Plano Técnico 2D y BOM de Equipos
+            ${RD.icon('qr')} Smart TV + Cámaras CCTV (/display.html)
           </a>
           <a class="btn" href="/admin/cards.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-            ${RD.icon('idcard')} Diseñador / Impresor Masivo de Tarjetas PVC
+            ${RD.icon('idcard')} Estudio e Impresor PDF de Tarjetas PVC
+          </a>
+          <a class="btn" href="/admin/sheets.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+            ${RD.icon('sheet')} Hoja Maestra en Vivo (Sheets Local)
+          </a>
+          <a class="btn" href="/propuesta.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; border-color:rgba(239,68,68,0.45); color:#ef4444;">
+            ${RD.icon('file-text')} Dossier Propuesta Comercial (Web)
+          </a>
+          <a class="btn" href="/INFORME_PROPUESTA_COMERCIAL_RED_GYM.pdf" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+            ${RD.icon('cloud-download')} Dossier Ejecutivo Oficial (PDF A4)
+          </a>
+          <a class="btn" href="/anatomy/index.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; border-color:rgba(39,230,255,0.45); color:#27e6ff;">
+            ${RD.icon('activity')} Máquina Interactiva 3D (Estándar)
+          </a>
+          <a class="btn" href="/anatomy-pro/index.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; border-color:rgba(16,185,129,0.45); color:#10b981;">
+            ${RD.icon('activity')} Simulador 3D Pro Industrial
+          </a>
+          <a class="btn" href="/anatomy/report.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+            ${RD.icon('file-text')} Informe de Ingeniería 3D y Plano 2D BOM
           </a>
         </div>
       </div>
