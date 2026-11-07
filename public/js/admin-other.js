@@ -508,16 +508,15 @@
         </div>
 
         <div class="card mb">
-          <h3>Resumen de Arqueo de Caja del Día</h3>
-          <div class="grid g5 mt2" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px">
+          <h3>Resumen de Arqueo de Caja del Día (Efectivo, Yape y Plin)</h3>
+          <div class="grid g4 mt2" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px">
             <div class="small">${RD.icon('cash')} Efectivo cobrado: <b>${money(cash.byMethod.efectivo || 0)}</b></div>
             <div class="small">${RD.icon('expense')} Gastos en efectivo: <b class="bad">-${money(cash.expenses.filter(e => e.method === 'efectivo').reduce((a, e) => a + e.amount, 0))}</b></div>
             <div class="small">${RD.icon('qr')} Yape: <b>${money(cash.byMethod.yape || 0)}</b></div>
             <div class="small">${RD.icon('qr')} Plin: <b>${money(cash.byMethod.plin || 0)}</b></div>
-            <div class="small">${RD.icon('card')} Tarjeta POS: <b>${money(cash.byMethod.tarjeta || 0)}</b></div>
           </div>
           <div class="tip small mt">
-            <b>Regla de Arqueo para el Dueño:</b> Al cerrar caja, debe haber exactamente <b>${money(cash.cash_in_drawer)}</b> en monedas y billetes dentro del cajón físico. En tu aplicación de celular debes tener <b>${money((cash.byMethod.yape || 0) + (cash.byMethod.plin || 0))}</b> entre Yape y Plin, y en el reporte de lote de tu POS físico debes tener <b>${money(cash.byMethod.tarjeta || 0)}</b>.
+            <b>Regla de Arqueo para el Dueño:</b> Al cerrar caja, debe haber exactamente <b>${money(cash.cash_in_drawer)}</b> en monedas y billetes dentro del cajón físico, y en tu aplicativo móvil debes tener <b>${money((cash.byMethod.yape || 0) + (cash.byMethod.plin || 0))}</b> entre Yape y Plin.
           </div>
         </div>
 
@@ -1460,12 +1459,12 @@
     const d = RD.openModal(`${RD.icon('unlock')} Apertura de Turno de Caja`, `
       <form id="shiftopenf">
         <label class="field">
-          <span>Nombre del Turno *</span>
+          <span>Modalidad de Turno del Día *</span>
           <select name="shift_name" required>
-            <option value="Turno Mañana (6:00 am - 2:00 pm)">Turno Mañana (6:00 am - 2:00 pm)</option>
-            <option value="Turno Tarde / Noche (2:00 pm - 9:00 pm)">Turno Tarde / Noche (2:00 pm - 9:00 pm)</option>
-            <option value="Turno Completo (6:00 am - 9:00 pm)">Turno Completo (6:00 am - 9:00 pm)</option>
-            <option value="Turno Fin de Semana">Turno Fin de Semana</option>
+            <option value="Turno Mañana (6:00 am - 2:00 pm)">🌅 Turno Mañana (6:00 am - 2:00 pm)</option>
+            <option value="Turno Tarde / Noche (2:00 pm - 9:00 pm)">🌇 Turno Tarde / Noche (2:00 pm - 9:00 pm)</option>
+            <option value="Turno Único / Día Completo — Atención del Dueño">👑 Turno Único / Día Completo (Atención del Dueño)</option>
+            <option value="Turno Fin de Semana">📅 Turno Fin de Semana</option>
           </select>
         </label>
         <label class="field">
@@ -1477,7 +1476,7 @@
           <textarea name="notes" rows="2" placeholder="Ej. Se reciben 50 soles en sencillo: monedas de 1, 2 y billetes de 10..."></textarea>
         </label>
         <div class="tip small mt mb">
-          <b>Control de Arqueo:</b> Este dinero inicial no cuenta como ganancia; es la base para asegurar que al cerrar el turno el efectivo físico coincida sin faltantes ni confusiones.
+          <b>Adaptable a 2 Turnos o Turno Único del Dueño:</b> Si trabajan 2 turnos (Mañana y Tarde), cada encargado abre y cuadra su propio turno. Si el propio dueño atiende todo el día, elige <b>Turno Único / Día Completo</b> para llevar una sola caja corrida.
         </div>
         <button class="btn ok block">${RD.icon('check')} Iniciar y Abrir Turno</button>
       </form>
@@ -4439,21 +4438,38 @@ function verEstado() {
   function renderPlansSettings(el, plans) {
     el.innerHTML = `
     <div class="card">
-      <div class="row between mb">
-        <h3>Planes de Membresía</h3>
-        <button class="btn sm primary" id="addplan">＋ Nuevo Plan</button>
+      <div class="row between wrap gap mb">
+        <div>
+          <h3>Planes de Membresía, Tarifas Dinámicas y Promociones Temporales</h3>
+          <p class="muted small">Crea planes permanentes u ofertas ocasionales. Modificar o desactivar un plan aplica solo a los nuevos inscritos sin alterar jamás a los socios ya registrados ni a los cuadres de caja pasados.</p>
+        </div>
+        <div class="row gap">
+          <button class="btn sm ghost" id="addpromoplan">🔥 Nueva Promo Temporal</button>
+          <button class="btn sm primary" id="addplan">＋ Nuevo Plan</button>
+        </div>
+      </div>
+      <div class="banner mb small" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3)">
+        🛡️ <b>Protección de Historial y Caja:</b> Cada socio inscrito guarda una copia congelada del precio y duración del momento en que se registró. Si cambias precios o finalizas una promoción temporal hoy, tus cierres de caja anteriores y las membresías vigentes de socios antiguos permanecen 100% intactos.
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Nombre</th><th>Duración</th><th>Precio</th><th>Estado</th><th></th></tr></thead>
+          <thead><tr><th>Nombre del Plan / Oferta</th><th>Tipo</th><th>Duración</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody>
             ${plans.map(p => `
             <tr>
-              <td><b>${esc(p.name)}</b></td>
+              <td>
+                <b>${esc(p.name)}</b>
+                ${p.promo_label ? `<div class="tiny" style="color:#f59e0b;font-weight:700">🏷️ ${esc(p.promo_label)}</div>` : ''}
+              </td>
+              <td>${p.is_promo ? '<span class="badge warn">🔥 Promo Temporal</span>' : '<span class="badge">Plan Regular</span>'}</td>
               <td>${p.months ? `${p.months} mes(es)` : `${p.days} día(s)`}</td>
               <td class="gold" style="font-weight:700">${money(p.price)}</td>
-              <td><span class="badge ${p.active ? 'ok' : 'bad'}">${p.active ? 'Activo' : 'Inactivo'}</span></td>
-              <td><button class="btn sm" data-editplan="${p.id}">Editar</button></td>
+              <td><span class="badge ${p.active ? 'ok' : 'bad'}">${p.active ? 'Activo (En venta)' : 'Finalizado / Archivado'}</span></td>
+              <td class="row gap">
+                <button class="btn sm" data-editplan="${p.id}">Editar</button>
+                <button class="btn sm ghost" data-toggleplan="${p.id}" title="${p.active ? 'Pausar oferta para nuevas ventas' : 'Reactivar plan'}">${p.active ? 'Pausar' : 'Activar'}</button>
+                <button class="btn sm danger" data-delplan="${p.id}" title="Archivar o eliminar">✕</button>
+              </td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -4461,28 +4477,58 @@ function verEstado() {
     </div>`;
 
     el.querySelector('#addplan').onclick = () => planEditorModal(null, () => RD.go('settings'));
-    el.onclick = e => {
+    el.querySelector('#addpromoplan').onclick = () => planEditorModal({ is_promo: 1, months: 1, days: 0, price: 60, active: 1, sort: 1 }, () => RD.go('settings'), true);
+    el.onclick = async e => {
       const ep = e.target.closest('[data-editplan]');
       if (ep) {
         const p = plans.find(x => x.id === +ep.dataset.editplan);
         planEditorModal(p, () => RD.go('settings'));
+        return;
+      }
+      const tp = e.target.closest('[data-toggleplan]');
+      if (tp) {
+        const p = plans.find(x => x.id === +tp.dataset.toggleplan);
+        if (!p) return;
+        try {
+          await RD.api.put('/plans/' + p.id, { active: p.active ? 0 : 1 });
+          RD.toast(p.active ? 'Plan pausado para nuevas inscripciones (socios antiguos mantienen su plan)' : 'Plan activado para nuevas ventas');
+          RD.go('settings');
+        } catch (err) { RD.toast(err.message, 'err'); }
+        return;
+      }
+      const dp = e.target.closest('[data-delplan]');
+      if (dp) {
+        const p = plans.find(x => x.id === +dp.dataset.delplan);
+        if (!p) return;
+        if (!await RD.confirm('Archivar o Eliminar Plan', `¿Deseas retirar el plan "${p.name}"? Si tiene socios históricos, se archivará de forma segura sin alterar ningún registro ni cuadre de caja pasado.`, 'Confirmar')) return;
+        try {
+          const r = await RD.api.del('/plans/' + p.id);
+          RD.toast(r.message || 'Plan eliminado');
+          RD.go('settings');
+        } catch (err) { RD.toast(err.message, 'err'); }
       }
     };
   }
 
-  function planEditorModal(p, done) {
-    const d = RD.openModal(p ? 'Editar Plan' : 'Nuevo Plan', `
+  function planEditorModal(p, done, isNewPromo) {
+    const isEdit = p && p.id;
+    const d = RD.openModal(isEdit ? 'Editar Plan o Promoción' : (isNewPromo ? '🔥 Nueva Promoción u Oferta Temporal' : 'Nuevo Plan de Membresía'), `
       <form id="pf">
-        <label class="field"><span>Nombre del plan *</span><input name="name" value="${esc(p?.name || '')}" required placeholder="Ej. 1 mes, 3 meses"></label>
+        <label class="field"><span>Nombre del plan u oferta *</span><input name="name" value="${esc(p?.name || '')}" required placeholder="Ej. 1 Mes Regular, Promo 2x1 Amigos, Campaña Verano"></label>
         <div class="grid g2 keep">
           <label class="field"><span>Duración en meses</span><input name="months" type="number" min="0" value="${p?.months ?? 1}"></label>
-          <label class="field"><span>O en días (ej. pase diario)</span><input name="days" type="number" min="0" value="${p?.days ?? 0}"></label>
+          <label class="field"><span>O en días exactos (ej. 15 días, pase)</span><input name="days" type="number" min="0" value="${p?.days ?? 0}"></label>
         </div>
         <div class="grid g2 keep">
-          <label class="field"><span>Precio (S/) *</span><input name="price" type="number" step="0.5" min="0" value="${p?.price ?? 60}" required></label>
-          <label class="field"><span>Orden</span><input name="sort" type="number" value="${p?.sort ?? 1}"></label>
+          <label class="field"><span>Precio de venta (S/) *</span><input name="price" type="number" step="0.5" min="0" value="${p?.price ?? 60}" required></label>
+          <label class="field"><span>Orden de aparición</span><input name="sort" type="number" value="${p?.sort ?? 1}"></label>
         </div>
-        <label class="check"><input type="checkbox" name="active" ${p ? (p.active ? 'checked' : '') : 'checked'}> <span>Plan activo para la venta</span></label>
+        <div class="card mb" style="background:var(--bg2);border:1px solid var(--line);padding:10px">
+          <label class="check"><input type="checkbox" name="is_promo" ${p?.is_promo ? 'checked' : ''}> <span>🔥 <b>Es una Promoción u Oferta Temporal</b> (puedes pausarla cuando termine la campaña)</span></label>
+          <label class="field mt2"><span>Etiqueta promocional (opcional)</span><input name="promo_label" value="${esc(p?.promo_label || '')}" placeholder="Ej. Solo por esta semana / Oferta Universitaria"></label>
+        </div>
+        <label class="check"><input type="checkbox" name="active" ${p ? (p.active ? 'checked' : '') : 'checked'}> <span>Disponible actualmente para nuevas inscripciones</span></label>
+        <div class="tiny muted mt">Nota: Cambiar este precio solo aplica a los socios que se inscriban a partir de ahora. Los socios antiguos conservan su tarifa original.</div>
         <button class="btn primary block mt">Guardar Plan</button>
       </form>
     `);
@@ -4497,12 +4543,14 @@ function verEstado() {
           days: +f.days.value || 0,
           price: +f.price.value,
           sort: +f.sort.value || 1,
+          is_promo: f.is_promo.checked ? 1 : 0,
+          promo_label: f.promo_label.value.trim() || null,
           active: f.active.checked ? 1 : 0
         };
-        if (p) await RD.api.put('/plans/' + p.id, body);
+        if (isEdit) await RD.api.put('/plans/' + p.id, body);
         else await RD.api.post('/plans', body);
         d.close();
-        RD.toast('Plan guardado');
+        RD.toast('Plan guardado correctamente');
         done && done();
       } catch (err) {
         RD.toast(err.message, 'err');
@@ -4804,15 +4852,15 @@ function verEstado() {
         </div>
       </div>
 
-      <!-- TARJETA: HERRAMIENTAS ADICIONALES, DOSSIERS COMERCIALES, SMART TV CCTV Y ANATOMÍA 3D -->
+      <!-- TARJETA: HERRAMIENTAS ADICIONALES, DOSSIERS COMERCIALES, PANTALLA DE RECEPCIÓN Y ANATOMÍA 3D -->
       <div class="card">
-        <h3 style="margin-bottom:0.5rem;">${RD.icon('printer')} Herramientas de Recepción, Dossiers Ejecutivos, Smart TV CCTV y Arquitectura 3D</h3>
+        <h3 style="margin-bottom:0.5rem;">${RD.icon('printer')} Herramientas de Recepción, Dossiers Ejecutivos, Monitor/Tablet de Bienvenida y Arquitectura 3D</h3>
         <p class="small muted" style="margin-bottom:0.85rem;">
-          Accede en 1 clic a la pantalla para la Smart TV del gimnasio (Cámaras CCTV 24/7 + Bienvenidas QR), a los Dossiers de Propuesta Comercial e Ingeniería (Web y PDF Oficial), a las Máquinas Interactivas 3D (Anatomy3D Estándar y Pro), al Plano Técnico BOM y al Estudio de Tarjetas PVC.
+          Accede en 1 clic a la pantalla de bienvenida para monitor de escritorio o tablet en recepción (Bienvenidas QR + Cobro Yape/Plin), a los Dossiers de Propuesta Comercial e Ingeniería (Web y PDF Oficial), a las Máquinas Interactivas 3D (Anatomy3D Estándar y Pro), al Plano Técnico BOM y al Estudio de Tarjetas PVC.
         </p>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <a class="btn primary" href="/display.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-            ${RD.icon('qr')} Smart TV + Cámaras CCTV (/display.html)
+            ${RD.icon('qr')} Pantalla Recepción Monitor / Tablet (/display.html)
           </a>
           <a class="btn" href="/admin/cards.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
             ${RD.icon('idcard')} Estudio e Impresor PDF de Tarjetas PVC

@@ -78,7 +78,6 @@
   };
 
   // ---------- Alta de socio ----------
-  const GOALS = ['Bajar de peso', 'Ganar masa muscular', 'Tonificar', 'Mejorar condición física', 'Salud y bienestar', 'Rendimiento deportivo'];
   RD.newMemberDialog = async function (onDone) {
     const plans = (await RD.getPlans()).filter(p => p.active);
     let photoData = null;
@@ -86,63 +85,101 @@
     let selStart = today;
     let extraDays = 0;
     let promoNote = '';
+    let isMigration = false;
+    let migStart = today;
+    let migEnd = RD.addDays(today, 15);
 
     const m = RD.openModal('Nuevo socio', `
     <form id="nf">
-      <div class="row gap2 mb"><label class="avatar lg" id="pbox" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">${RD.icon('camera', '', 26)}</label><div class="grow muted small">Toca para tomar o elegir una foto. Ayuda a validar la identidad en la puerta.<input id="photo" type="file" accept="image/*" capture="user" class="hidden"></div></div>
-      <label class="field"><span>Nombres y apellidos *</span><input name="name" required autocomplete="off"></label>
-      <div class="grid g2 keep"><label class="field"><span>DNI *</span><input name="dni" inputmode="numeric" maxlength="12" required autocomplete="off" placeholder="8 dígitos (extranjero: 6-12)"></label>
-      <label class="field"><span>Celular (WhatsApp)</span><input name="phone" inputmode="tel" placeholder="9XXXXXXXX" autocomplete="off"></label></div>
+      <div class="row gap2 mb"><label class="avatar lg" id="pbox" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">${RD.icon('camera', '', 26)}</label><div class="grow muted small">Foto del socio (opcional). Toca para tomar o elegir una imagen.<input id="photo" type="file" accept="image/*" capture="user" class="hidden"></div></div>
+      <label class="field"><span>Nombres y apellidos *</span><input name="name" required autocomplete="off" placeholder="Ej. Juan Pérez Quispe"></label>
+      <div class="grid g2 keep">
+        <label class="field"><span>DNI *</span><input name="dni" inputmode="numeric" maxlength="12" required autocomplete="off" placeholder="8 dígitos (extranjero: 6-12)"></label>
+        <label class="field"><span>Teléfono / WhatsApp</span><input name="phone" inputmode="tel" placeholder="9XXXXXXXX" autocomplete="off"></label>
+      </div>
       <div id="dni_match_box" class="hidden mb"></div>
-      <div class="grid g2 keep"><label class="field"><span>Fecha de nacimiento</span><input name="birth" type="date"></label>
-      <label class="field"><span>Sexo</span><select name="gender"><option value="">—</option><option>Femenino</option><option>Masculino</option></select></label></div>
-      <div class="grid g2 keep"><label class="field"><span>Objetivo</span><select name="goal"><option value="">—</option>${GOALS.map(g => `<option>${g}</option>`).join('')}</select></label>
-      <label class="field"><span>Nivel</span><select name="level"><option value="principiante">Principiante</option><option value="intermedio">Intermedio</option><option value="avanzado">Avanzado</option></select></label></div>
-      <label class="field"><span>Contacto de emergencia (nombre y teléfono)</span><input name="emergency"></label>
-      <label class="field"><span>Lesiones o condiciones de salud</span><textarea name="health" placeholder="Ninguna / hipertensión / rodilla / etc."></textarea></label>
       <hr style="border-color:var(--line)">
-      <h3>Plan y período de membresía</h3>
-      <div class="chips mb" id="plans">${plans.map((p, i) => `<span class="chip ${i === 0 ? 'on' : ''}" data-id="${p.id}">${esc(p.name)} · ${money(p.price)}</span>`).join('')}<span class="chip" data-id="">Sin plan (solo registrar)</span></div>
+      <h3>Plan y modalidad de inscripción</h3>
+      <div class="chips mb" id="plans">${plans.map((p, i) => `<span class="chip ${i === 0 ? 'on' : ''}" data-id="${p.id}">${esc(p.name)}${p.is_promo ? ' 🔥' : ''} · ${money(p.price)}</span>`).join('')}<span class="chip" data-id="">Sin plan (solo registrar)</span></div>
       <div id="paybox">
         <div class="card mb" style="background:var(--bg2);border:1px solid var(--line);padding:12px">
-          <div class="small bold muted mb" style="display:flex;align-items:center;gap:6px">${RD.icon('calendar', '', 15)} ¿Cuándo inicia su membresía?</div>
-          <div class="chips mb" id="start_chips">
-            <span class="chip on" data-s="today">Hoy (${RD.fmtDate(today)})</span>
-            <span class="chip" data-s="tomorrow">Mañana</span>
-            <span class="chip" data-s="monday">Próx. Lunes</span>
-            <span class="chip" data-s="custom">Fecha libre</span>
+          <div class="small bold muted mb">¿Es una inscripción pagada hoy o un socio antiguo con plan en curso?</div>
+          <div class="chips mb" id="reg_mode_chips">
+            <span class="chip on" data-mode="new">🆕 Nueva Inscripción (Cobro Hoy en Caja)</span>
+            <span class="chip" data-mode="migration">🔄 Socio Antiguo en Curso (Ya pagó antes · No afecta Caja)</span>
           </div>
-          <input type="date" id="custom_start_in" class="hidden mb" style="max-width:200px" value="${today}">
 
-          <div class="small bold muted mb mt" style="display:flex;align-items:center;gap:6px">${RD.icon('gift', '', 15)} Días extra de promoción / inauguración:</div>
-          <div class="chips mb" id="promo_chips">
-            <span class="chip on" data-d="0">Sin promo (+0d)</span>
-            <span class="chip" data-d="7">+7 días (1 sem gratis)</span>
-            <span class="chip" data-d="15">+15 días</span>
-            <span class="chip" data-d="30">+30 días (+1 mes gratis)</span>
-            <span class="chip" data-d="custom">Otro</span>
+          <div id="new_schedule_box">
+            <div class="small bold muted mb" style="display:flex;align-items:center;gap:6px">${RD.icon('calendar', '', 15)} ¿Cuándo inicia su membresía?</div>
+            <div class="chips mb" id="start_chips">
+              <span class="chip on" data-s="today">Hoy (${RD.fmtDate(today)})</span>
+              <span class="chip" data-s="tomorrow">Mañana</span>
+              <span class="chip" data-s="monday">Próx. Lunes</span>
+              <span class="chip" data-s="custom">Fecha libre</span>
+            </div>
+            <input type="date" id="custom_start_in" class="hidden mb" style="max-width:200px" value="${today}">
+
+            <div class="small bold muted mb mt" style="display:flex;align-items:center;gap:6px">${RD.icon('gift', '', 15)} Días extra de promoción / cortesía:</div>
+            <div class="chips mb" id="promo_chips">
+              <span class="chip on" data-d="0">Sin promo (+0d)</span>
+              <span class="chip" data-d="7">+7 días (1 sem gratis)</span>
+              <span class="chip" data-d="15">+15 días</span>
+              <span class="chip" data-d="30">+30 días (+1 mes gratis)</span>
+              <span class="chip" data-d="custom">Otro</span>
+            </div>
+            <div class="grid g2 keep mb hidden" id="custom_promo_box">
+              <input type="number" min="0" placeholder="Cant. días extra" id="custom_extra_days" style="max-width:140px">
+              <input placeholder="Detalle: Promo campaña, amigo..." id="custom_promo_note">
+            </div>
           </div>
-          <div class="grid g2 keep mb hidden" id="custom_promo_box">
-            <input type="number" min="0" placeholder="Cant. días extra" id="custom_extra_days" style="max-width:140px">
-            <input placeholder="Detalle: Promo inauguración, amigo..." id="custom_promo_note">
+
+          <div id="mig_box" class="hidden" style="border-top:1px dashed var(--line);padding-top:10px;margin-top:8px">
+            <div class="banner mb" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.35);color:var(--fg)">
+              <b>🔄 Migración de Socio en Curso:</b> Úsalo para socios que ya tenían plan vigente antes de instalar el sistema. Su membresía quedará activa por el tiempo que le resta <b>sin sumar dinero falso a la Caja de Hoy</b>.
+            </div>
+            <div class="small bold muted mb">Atajo rápido: ¿Cuántos días de vigencia le quedan a partir de hoy?</div>
+            <div class="chips mb" id="mig_days_chips">
+              <span class="chip" data-md="7">Quedan 7 días</span>
+              <span class="chip" data-md="10">Quedan 10 días</span>
+              <span class="chip on" data-md="15">Quedan 15 días (Mitad de mes)</span>
+              <span class="chip" data-md="20">Quedan 20 días</span>
+              <span class="chip" data-md="25">Quedan 25 días</span>
+            </div>
+            <div class="grid g3 keep">
+              <label class="field"><span>Días restantes desde hoy</span><input type="number" id="mig_days_inp" min="1" max="365" value="15"></label>
+              <label class="field"><span>Fecha en que inició</span><input type="date" id="mig_start_inp" value="${today}"></label>
+              <label class="field"><span>Fecha exacta de vencimiento *</span><input type="date" id="mig_end_inp" value="${migEnd}"></label>
+            </div>
+            <label class="field"><span>Nota de migración (opcional)</span><input id="mig_note_inp" placeholder="Ej. Socio antiguo en curso — pagó el mes pasado"></label>
           </div>
         </div>
 
-        <div class="grid g2 keep"><label class="field"><span>Monto a cobrar (S/)</span><input name="price" type="number" step="0.5" min="0"></label>
-        <label class="field"><span>Método de pago *</span><select name="method" id="nfmeth"><option value="efectivo">Efectivo</option><option value="yape">Yape</option><option value="plin">Plin</option><option value="tarjeta">Tarjeta POS</option><option value="transferencia">Transferencia Bancaria</option></select></label></div>
-        
-        <div class="row gap wrap mb">
-          <button type="button" class="btn small ok" id="btnyapeqr">${RD.icon('qr', '', 14)} QR Yape/Plin</button>
-          <button type="button" class="btn small info" id="btncardpos" style="background:#0284c7;color:#fff">${RD.icon('card', '', 14)} Tarjeta POS</button>
-        </div>
+        <div id="live_pay_section">
+          <div class="grid g2 keep">
+            <label class="field"><span>Monto a cobrar hoy (S/)</span><input name="price" type="number" step="0.5" min="0"></label>
+            <label class="field"><span>Método de pago (Efectivo / Yape / Plin) *</span>
+              <select name="method" id="nfmeth">
+                <option value="efectivo">💵 Efectivo</option>
+                <option value="yape">📱 Yape</option>
+                <option value="plin">📲 Plin</option>
+                <option value="transferencia">🏦 Transferencia Bancaria</option>
+                <option value="tarjeta">💳 Tarjeta (Excepcional)</option>
+              </select>
+            </label>
+          </div>
 
-        <div class="yape-box hidden mb mt" id="nf_yape">
-          <label class="field"><span id="nfop_label">N° de Operación Yape/Plin (4-6 dígitos)</span><input name="op_code" id="nfop" placeholder="Ej. 182940"></label>
+          <div class="row gap wrap mb">
+            <button type="button" class="btn small ok" id="btnyapeqr">${RD.icon('qr', '', 14)} Cobrar con QR Yape / Plin</button>
+          </div>
+
+          <div class="yape-box hidden mb mt" id="nf_yape">
+            <label class="field"><span id="nfop_label">N° de Operación Yape/Plin (opcional / validación)</span><input name="op_code" id="nfop" placeholder="Ej. 182940"></label>
+          </div>
+          <label class="field hidden" id="dn"><span>Motivo del descuento</span><input name="discount_note" placeholder="Promoción temporal, convenio…"></label>
         </div>
-        <label class="field hidden" id="dn"><span>Motivo del descuento</span><input name="discount_note" placeholder="Promoción de inauguración, convenio…"></label>
         <div class="banner" id="prev"></div>
       </div>
-      <label class="check"><input type="checkbox" name="consent" required> <span>El socio autoriza el uso de sus datos personales y de salud para la gestión del gimnasio y declara estar apto para realizar actividad física.</span></label>
+      <label class="check"><input type="checkbox" name="consent" checked required> <span>Registrar socio activo con acceso QR y carnet digital del gimnasio.</span></label>
       <button class="btn primary block" type="submit">Registrar socio</button>
     </form>`, { wide: true, sticky: true });
 
@@ -152,13 +189,51 @@
     const refresh = () => {
       m.el.querySelector('#paybox').classList.toggle('hidden', !plan);
       if (!plan) return;
+      m.el.querySelector('#new_schedule_box').classList.toggle('hidden', isMigration);
+      m.el.querySelector('#mig_box').classList.toggle('hidden', !isMigration);
+      m.el.querySelector('#live_pay_section').classList.toggle('hidden', isMigration);
       f.price.value = plan.price;
-      const pv = RD.previewEnd(null, plan, selStart, extraDays);
-      const isFuture = selStart > today;
-      m.el.querySelector('#prev').innerHTML = `Plan <b>${esc(plan.name)}</b>: ${isFuture ? '<i>(Inicio programado)</i> ' : ''}del <b>${RD.fmtDate(pv.start)}</b> al <b>${RD.fmtDate(pv.end)}</b> ${extraDays > 0 ? `<span class="badge info" style="margin-left:6px">+${extraDays}d promo gratis</span>` : ''}`;
+      if (isMigration) {
+        m.el.querySelector('#prev').innerHTML = `🔄 <b>Migración Socio Antiguo (${esc(plan.name)})</b>: Vigente del <b>${RD.fmtDate(migStart)}</b> al <b>${RD.fmtDate(migEnd)}</b> · <span class="badge ok">S/ 0.00 en Caja de Hoy (Pagó previamente)</span>`;
+      } else {
+        const pv = RD.previewEnd(null, plan, selStart, extraDays);
+        const isFuture = selStart > today;
+        m.el.querySelector('#prev').innerHTML = `Plan <b>${esc(plan.name)}</b>: ${isFuture ? '<i>(Inicio programado)</i> ' : ''}del <b>${RD.fmtDate(pv.start)}</b> al <b>${RD.fmtDate(pv.end)}</b> ${extraDays > 0 ? `<span class="badge info" style="margin-left:6px">+${extraDays}d promo gratis</span>` : ''}`;
+      }
       m.el.querySelector('#dn').classList.add('hidden');
     };
     refresh();
+
+    // Selector de modalidad (Nueva inscripción vs Socio antiguo en curso)
+    m.el.querySelector('#reg_mode_chips').onclick = e => {
+      const c = e.target.closest('[data-mode]'); if (!c) return;
+      m.el.querySelectorAll('#reg_mode_chips .chip').forEach(x => x.classList.toggle('on', x === c));
+      isMigration = c.dataset.mode === 'migration';
+      refresh();
+    };
+
+    // Controles de migración
+    const migDaysInp = m.el.querySelector('#mig_days_inp');
+    const migStartInp = m.el.querySelector('#mig_start_inp');
+    const migEndInp = m.el.querySelector('#mig_end_inp');
+    const migNoteInp = m.el.querySelector('#mig_note_inp');
+    m.el.querySelector('#mig_days_chips').onclick = e => {
+      const c = e.target.closest('[data-md]'); if (!c) return;
+      m.el.querySelectorAll('#mig_days_chips .chip').forEach(x => x.classList.toggle('on', x === c));
+      const d = +c.dataset.md || 15;
+      migDaysInp.value = d;
+      migEnd = RD.addDays(today, d);
+      migEndInp.value = migEnd;
+      refresh();
+    };
+    migDaysInp.oninput = () => {
+      const d = Math.max(1, +migDaysInp.value || 1);
+      migEnd = RD.addDays(today, d);
+      migEndInp.value = migEnd;
+      refresh();
+    };
+    migStartInp.onchange = () => { migStart = migStartInp.value || today; refresh(); };
+    migEndInp.onchange = () => { migEnd = migEndInp.value || RD.addDays(today, 15); refresh(); };
 
     // Chips de inicio
     const customStartInp = m.el.querySelector('#custom_start_in');
@@ -202,33 +277,23 @@
       const opInp = m.el.querySelector('#nfop');
       if (meth === 'yape' || meth === 'plin') {
         opBox.classList.remove('hidden');
-        opLbl.textContent = 'N° de Operación Yape/Plin (4-6 dígitos) *';
+        opLbl.textContent = 'N° de Operación Yape/Plin (4-6 dígitos)';
         opInp.placeholder = 'Ej. 182940';
-        setTimeout(() => opInp.focus(), 50);
-      } else if (meth === 'tarjeta') {
-        opBox.classList.remove('hidden');
-        opLbl.textContent = 'N° de Referencia / Voucher del POS (Izipay / Niubiz) *';
-        opInp.placeholder = 'Ej. Ref #041289';
-        setTimeout(() => opInp.focus(), 50);
-        const amount = +f.price.value || (plan ? plan.price : 0);
-        RD.setCustomerDisplay({
-          mode: 'card',
-          method: 'tarjeta',
-          title: `Membresía ${plan ? plan.name : ''} (${f.name.value.trim() || 'Socio'})`,
-          amount: amount
-        }).catch(() => {});
       } else if (meth === 'transferencia') {
         opBox.classList.remove('hidden');
-        opLbl.textContent = 'N° de Operación Bancaria *';
+        opLbl.textContent = 'N° de Operación Bancaria';
         opInp.placeholder = 'Ej. Op #0049182';
-        setTimeout(() => opInp.focus(), 50);
+      } else if (meth === 'tarjeta') {
+        opBox.classList.remove('hidden');
+        opLbl.textContent = 'N° de Referencia POS';
+        opInp.placeholder = 'Ej. Ref #041289';
       } else {
         opBox.classList.add('hidden');
         RD.setCustomerDisplay({ mode: 'idle' }).catch(() => {});
       }
     }
 
-    // Cobro Yape con QR dinámico
+    // Cobro Yape/Plin con QR
     m.el.querySelector('#btnyapeqr').onclick = () => {
       if (!plan) return RD.toast('Selecciona un plan primero', 'warn');
       const amount = +f.price.value || plan.price;
@@ -246,30 +311,12 @@
       });
     };
 
-    // Cobro Tarjeta POS
-    m.el.querySelector('#btncardpos').onclick = () => {
-      if (!plan) return RD.toast('Selecciona un plan primero', 'warn');
-      const amount = +f.price.value || plan.price;
-      RD.cardPaymentModal({
-        amount,
-        concept: `Membresía ${plan.name} (${f.name.value.trim() || 'Nuevo socio'})`,
-        onPaid: (ref) => {
-          if (ref) {
-            f.op_code.value = ref;
-            f.method.value = 'tarjeta';
-            updateMethodFields('tarjeta');
-            RD.toast('Ref. de tarjeta cargada');
-          }
-        }
-      });
-    };
-
     m.el.querySelector('#plans').onclick = e => {
       const c = e.target.closest('[data-id]'); if (!c) return;
       m.el.querySelectorAll('#plans .chip').forEach(x => x.classList.toggle('on', x === c));
       plan = plans.find(p => String(p.id) === c.dataset.id) || null; refresh();
     };
-    f.price.oninput = () => { if (plan) m.el.querySelector('#dn').classList.toggle('hidden', +f.price.value >= plan.price); };
+    f.price.oninput = () => { if (plan && !isMigration) m.el.querySelector('#dn').classList.toggle('hidden', +f.price.value >= plan.price); };
     m.el.querySelector('#nfmeth').onchange = e => {
       updateMethodFields(e.target.value);
     };
@@ -278,7 +325,7 @@
       const file = e.target.files[0]; if (!file) return;
       try { photoData = await RD.resizeImage(file); m.el.querySelector('#pbox').innerHTML = `<img src="${photoData}" alt="">`; } catch (err) { RD.toast(err.message, 'err'); }
     };
-    // Detección automática en vivo de DNI (socio existente o antiguo para renovar sin duplicados)
+    // Detección automática en vivo de DNI
     const dniMatchBox = m.el.querySelector('#dni_match_box');
     const checkDni = RD.debounce(async () => {
       const val = f.dni.value.trim();
@@ -323,11 +370,22 @@
       await RD.busy(f.querySelector('button[type=submit]'), async () => {
         try {
           const body = Object.fromEntries(new FormData(f).entries());
-          body.consent = f.consent.checked; body.plan_id = plan ? plan.id : null;
+          body.consent = f.consent.checked;
+          body.plan_id = plan ? plan.id : null;
           if (plan) {
-            body.start_date = selStart;
-            body.extra_days = extraDays;
-            body.promo_note = promoNote || null;
+            if (isMigration) {
+              body.is_migration = true;
+              body.start_date = migStart;
+              body.end_date = migEnd;
+              body.promo_note = migNoteInp.value.trim() || 'Migración de socio antiguo en curso (pagó previamente)';
+              delete body.method;
+              delete body.op_code;
+            } else {
+              body.is_migration = false;
+              body.start_date = selStart;
+              body.extra_days = extraDays;
+              body.promo_note = promoNote || null;
+            }
           } else {
             delete body.price; delete body.method; delete body.op_code;
           }
@@ -355,7 +413,7 @@
     const rcptNo = r.receipt?.receipt_no || (r.membership?.payment_id ? `B001-${String(r.membership.payment_id).padStart(6, '0')}` : '');
     const rcptUrl = (r.receipt?.payment_id || r.membership?.payment_id) ? `${location.origin}/#receipt:${r.receipt?.payment_id || r.membership?.payment_id}` : '';
     const msg = [
-      `¡Bienvenido(a) a ${RD.pub.gym_name || 'GIMNASIO RED GYM Club'}!`,
+      `¡Bienvenido(a) a ${RD.pub.gym_name || 'GIMNASIO RED GYM'}!`,
       `Tu membresía ya se encuentra activa:`,
       `• Socio: *${mem.name}*`,
       `• Código de Socio: *${mem.code}*`,
@@ -372,10 +430,10 @@
     const d = RD.openModal('Socio registrado con éxito', `
       <div class="center"><div class="row" style="justify-content:center;margin-bottom:8px">${avatar(mem, true)}</div>
       <h2>${esc(mem.name)}</h2><div class="gold" style="font-size:1.6rem;font-weight:800">${esc(mem.code)}</div>
-      ${r.membership ? `<p>Membresía vigente hasta <b>${RD.fmtDate(r.membership.end)}</b></p>` : '<p class="muted">Sin membresía activa todavía.</p>'}</div>
+      ${r.membership ? `<p>Membresía vigente hasta <b>${RD.fmtDate(r.membership.end)}</b> ${r.membership.is_migration ? '<span class="badge info">Migración sin cobro en caja</span>' : ''}</p>` : '<p class="muted">Sin membresía activa todavía.</p>'}</div>
       <div class="grid mt">
         ${r.receipt ? `<button class="btn ok" id="rcptbtn">${RD.icon('receipt', '', 15)} Ver e Imprimir Boleta</button>` : ''}
-        ${wa ? `<a class="btn ok" target="_blank" rel="noopener" href="${wa}">${RD.icon('whatsapp', '', 15)} Enviar Boleta y Acceso por WhatsApp</a>` : ''}
+        ${wa ? `<a class="btn ok" target="_blank" rel="noopener" href="${wa}">${RD.icon('whatsapp', '', 15)} Enviar Acceso por WhatsApp</a>` : ''}
         <div class="grid g2 keep gap">
           <a class="btn primary" target="_blank" href="/admin/cards.html?ids=${mem.id}&autodownload=pdf">${RD.icon('save', '', 15)} Descargar Carnet PDF</a>
           <a class="btn" target="_blank" href="/admin/cards.html?ids=${mem.id}">${RD.icon('idcard', '', 15)} Carnet QR (PNG / Compartir)</a>
@@ -398,60 +456,109 @@
     let selStart = (curEnd && curEnd >= today) ? RD.addDays(curEnd, 1) : today;
     let extraDays = 0;
     let promoNote = '';
+    let isMigration = false;
+    let migStart = today;
+    let migEnd = RD.addDays(today, 15);
 
-    const m = RD.openModal('Renovar membresía', `
+    const m = RD.openModal('Renovar o Regularizar Membresía', `
       <p><b>${esc(name)}</b> ${curEnd ? `<span class="muted">· vence ${RD.fmtDate(curEnd)}</span>` : ''}</p>
-      <div class="chips mb" id="plans">${act.map(p => `<span class="chip ${p === plan ? 'on' : ''}" data-id="${p.id}">${esc(p.name)} · ${money(p.price)}</span>`).join('')}</div>
+      <div class="chips mb" id="plans">${act.map(p => `<span class="chip ${p === plan ? 'on' : ''}" data-id="${p.id}">${esc(p.name)}${p.is_promo ? ' 🔥' : ''} · ${money(p.price)}</span>`).join('')}</div>
       <form id="rf">
         <div class="card mb" style="background:var(--bg2);border:1px solid var(--line);padding:12px">
-          <div class="small bold muted mb" style="display:flex;align-items:center;gap:6px">${RD.icon('calendar', '', 15)} Fecha de inicio de la renovación:</div>
-          <div class="chips mb" id="r_start_chips">
-            <span class="chip on" data-s="auto">${curEnd && curEnd >= today ? 'Al vencer actual (' + RD.fmtDate(curEnd) + ')' : 'Hoy (' + RD.fmtDate(today) + ')'}</span>
-            <span class="chip" data-s="today">Hoy</span>
-            <span class="chip" data-s="tomorrow">Mañana</span>
-            <span class="chip" data-s="monday">Próx. Lunes</span>
-            <span class="chip" data-s="custom">Fecha libre</span>
+          <div class="small bold muted mb">Modalidad de registro:</div>
+          <div class="chips mb" id="r_mode_chips">
+            <span class="chip on" data-mode="new">🆕 Renovación Pagada Hoy (Suma a Caja)</span>
+            <span class="chip" data-mode="migration">🔄 Socio en Curso / Migración (Pagó antes · No afecta Caja)</span>
           </div>
-          <input type="date" id="r_custom_start_in" class="hidden mb" style="max-width:200px" value="${selStart}">
 
-          <div class="small bold muted mb mt" style="display:flex;align-items:center;gap:6px">${RD.icon('gift', '', 15)} Días extra de promoción:</div>
-          <div class="chips mb" id="r_promo_chips">
-            <span class="chip on" data-d="0">Sin promo (+0d)</span>
-            <span class="chip" data-d="7">+7 días (1 sem)</span>
-            <span class="chip" data-d="15">+15 días</span>
-            <span class="chip" data-d="30">+30 días (+1 mes)</span>
-            <span class="chip" data-d="custom">Otro</span>
+          <div id="r_new_schedule_box">
+            <div class="small bold muted mb" style="display:flex;align-items:center;gap:6px">${RD.icon('calendar', '', 15)} Fecha de inicio de la renovación:</div>
+            <div class="chips mb" id="r_start_chips">
+              <span class="chip on" data-s="auto">${curEnd && curEnd >= today ? 'Al vencer actual (' + RD.fmtDate(curEnd) + ')' : 'Hoy (' + RD.fmtDate(today) + ')'}</span>
+              <span class="chip" data-s="today">Hoy</span>
+              <span class="chip" data-s="tomorrow">Mañana</span>
+              <span class="chip" data-s="monday">Próx. Lunes</span>
+              <span class="chip" data-s="custom">Fecha libre</span>
+            </div>
+            <input type="date" id="r_custom_start_in" class="hidden mb" style="max-width:200px" value="${selStart}">
+
+            <div class="small bold muted mb mt" style="display:flex;align-items:center;gap:6px">${RD.icon('gift', '', 15)} Días extra de promoción:</div>
+            <div class="chips mb" id="r_promo_chips">
+              <span class="chip on" data-d="0">Sin promo (+0d)</span>
+              <span class="chip" data-d="7">+7 días (1 sem)</span>
+              <span class="chip" data-d="15">+15 días</span>
+              <span class="chip" data-d="30">+30 días (+1 mes)</span>
+              <span class="chip" data-d="custom">Otro</span>
+            </div>
+            <div class="grid g2 keep mb hidden" id="r_custom_promo_box">
+              <input type="number" min="0" placeholder="Cant. días extra" id="r_custom_extra_days" style="max-width:140px">
+              <input placeholder="Detalle: Fidelidad, promo..." id="r_custom_promo_note">
+            </div>
           </div>
-          <div class="grid g2 keep mb hidden" id="r_custom_promo_box">
-            <input type="number" min="0" placeholder="Cant. días extra" id="r_custom_extra_days" style="max-width:140px">
-            <input placeholder="Detalle: Fidelidad, promo..." id="r_custom_promo_note">
+
+          <div id="r_mig_box" class="hidden" style="border-top:1px dashed var(--line);padding-top:10px;margin-top:8px">
+            <div class="banner mb" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.35);color:var(--fg)">
+              <b>🔄 Regularización de Plan en Curso:</b> Activa los días restantes del socio sin generar cobro en la Caja de Hoy.
+            </div>
+            <div class="grid g2 keep">
+              <label class="field"><span>Fecha de inicio</span><input type="date" id="r_mig_start" value="${today}"></label>
+              <label class="field"><span>Fecha exacta de vencimiento *</span><input type="date" id="r_mig_end" value="${migEnd}"></label>
+            </div>
           </div>
         </div>
 
-        <div class="grid g2 keep"><label class="field"><span>Monto (S/)</span><input name="price" type="number" step="0.5" min="0" required></label>
-        <label class="field"><span>Método de pago</span><select name="method" id="rfmeth"><option value="efectivo">Efectivo</option><option value="yape">Yape</option><option value="plin">Plin</option><option value="tarjeta">Tarjeta POS</option><option value="transferencia">Transferencia Bancaria</option></select></label></div>
-        
-        <div class="row gap wrap mb">
-          <button type="button" class="btn small ok" id="r_btnyapeqr">${RD.icon('qr', '', 14)} QR Yape/Plin</button>
-          <button type="button" class="btn small info" id="r_btncardpos" style="background:#0284c7;color:#fff">${RD.icon('card', '', 14)} Tarjeta POS</button>
-        </div>
+        <div id="r_live_pay_section">
+          <div class="grid g2 keep">
+            <label class="field"><span>Monto (S/)</span><input name="price" type="number" step="0.5" min="0" required></label>
+            <label class="field"><span>Método de pago (Efectivo / Yape / Plin)</span>
+              <select name="method" id="rfmeth">
+                <option value="efectivo">💵 Efectivo</option>
+                <option value="yape">📱 Yape</option>
+                <option value="plin">📲 Plin</option>
+                <option value="transferencia">🏦 Transferencia Bancaria</option>
+                <option value="tarjeta">💳 Tarjeta (Excepcional)</option>
+              </select>
+            </label>
+          </div>
 
-        <div class="yape-box hidden mb mt" id="rf_yape">
-          <label class="field"><span id="rfop_label">N° de Operación Yape/Plin (4-6 dígitos)</span><input name="op_code" id="rfop" placeholder="Ej. 182940"></label>
+          <div class="row gap wrap mb">
+            <button type="button" class="btn small ok" id="r_btnyapeqr">${RD.icon('qr', '', 14)} Cobrar con QR Yape / Plin</button>
+          </div>
+
+          <div class="yape-box hidden mb mt" id="rf_yape">
+            <label class="field"><span id="rfop_label">N° de Operación Yape/Plin (4-6 dígitos)</span><input name="op_code" id="rfop" placeholder="Ej. 182940"></label>
+          </div>
+          <label class="field hidden" id="dn"><span>Motivo del descuento</span><input name="discount_note"></label>
         </div>
-        <label class="field hidden" id="dn"><span>Motivo del descuento</span><input name="discount_note"></label>
         <div class="banner" id="prev"></div>
-        <button class="btn primary block">Cobrar y renovar</button>
+        <button class="btn primary block" id="r_submit_btn">Cobrar y renovar</button>
       </form>`);
 
     const f = m.el.querySelector('#rf');
     const refresh = () => {
       f.price.value = plan.price;
-      const pv = RD.previewEnd(null, plan, selStart, extraDays);
-      m.el.querySelector('#prev').innerHTML = `Nuevo período: <b>${RD.fmtDate(pv.start)}</b> → <b>${RD.fmtDate(pv.end)}</b> ${extraDays > 0 ? `<span class="badge info" style="margin-left:6px">+${extraDays}d de promo</span>` : ''}`;
+      m.el.querySelector('#r_new_schedule_box').classList.toggle('hidden', isMigration);
+      m.el.querySelector('#r_mig_box').classList.toggle('hidden', !isMigration);
+      m.el.querySelector('#r_live_pay_section').classList.toggle('hidden', isMigration);
+      m.el.querySelector('#r_submit_btn').textContent = isMigration ? 'Activar plan en curso (Sin cobro en Caja)' : 'Cobrar y renovar';
+      if (isMigration) {
+        m.el.querySelector('#prev').innerHTML = `🔄 Período en curso: <b>${RD.fmtDate(migStart)}</b> → <b>${RD.fmtDate(migEnd)}</b> · <span class="badge ok">Sin cobro en Caja de Hoy</span>`;
+      } else {
+        const pv = RD.previewEnd(null, plan, selStart, extraDays);
+        m.el.querySelector('#prev').innerHTML = `Nuevo período: <b>${RD.fmtDate(pv.start)}</b> → <b>${RD.fmtDate(pv.end)}</b> ${extraDays > 0 ? `<span class="badge info" style="margin-left:6px">+${extraDays}d de promo</span>` : ''}`;
+      }
       m.el.querySelector('#dn').classList.add('hidden');
     };
     refresh();
+
+    m.el.querySelector('#r_mode_chips').onclick = e => {
+      const c = e.target.closest('[data-mode]'); if (!c) return;
+      m.el.querySelectorAll('#r_mode_chips .chip').forEach(x => x.classList.toggle('on', x === c));
+      isMigration = c.dataset.mode === 'migration';
+      refresh();
+    };
+    m.el.querySelector('#r_mig_start').onchange = e => { migStart = e.target.value || today; refresh(); };
+    m.el.querySelector('#r_mig_end').onchange = e => { migEnd = e.target.value || RD.addDays(today, 15); refresh(); };
 
     // Chips de inicio
     const customStartInp = m.el.querySelector('#r_custom_start_in');
@@ -496,26 +603,16 @@
       const opInp = m.el.querySelector('#rfop');
       if (meth === 'yape' || meth === 'plin') {
         opBox.classList.remove('hidden');
-        opLbl.textContent = 'N° de Operación Yape/Plin (4-6 dígitos) *';
+        opLbl.textContent = 'N° de Operación Yape/Plin (4-6 dígitos)';
         opInp.placeholder = 'Ej. 182940';
-        setTimeout(() => opInp.focus(), 50);
-      } else if (meth === 'tarjeta') {
-        opBox.classList.remove('hidden');
-        opLbl.textContent = 'N° de Referencia / Voucher del POS (Izipay / Niubiz) *';
-        opInp.placeholder = 'Ej. Ref #041289';
-        setTimeout(() => opInp.focus(), 50);
-        const amount = +f.price.value || plan.price;
-        RD.setCustomerDisplay({
-          mode: 'card',
-          method: 'tarjeta',
-          title: `Renovación ${plan ? plan.name : ''} (${name})`,
-          amount: amount
-        }).catch(() => {});
       } else if (meth === 'transferencia') {
         opBox.classList.remove('hidden');
-        opLbl.textContent = 'N° de Operación Bancaria *';
+        opLbl.textContent = 'N° de Operación Bancaria';
         opInp.placeholder = 'Ej. Op #0049182';
-        setTimeout(() => opInp.focus(), 50);
+      } else if (meth === 'tarjeta') {
+        opBox.classList.remove('hidden');
+        opLbl.textContent = 'N° de Referencia POS';
+        opInp.placeholder = 'Ej. Ref #041289';
       } else {
         opBox.classList.add('hidden');
         RD.setCustomerDisplay({ mode: 'idle' }).catch(() => {});
@@ -539,29 +636,12 @@
       });
     };
 
-    // Tarjeta modal
-    m.el.querySelector('#r_btncardpos').onclick = () => {
-      const amount = +f.price.value || plan.price;
-      RD.cardPaymentModal({
-        amount,
-        concept: `Renovación ${plan.name} (${name})`,
-        onPaid: (ref) => {
-          if (ref) {
-            f.op_code.value = ref;
-            f.method.value = 'tarjeta';
-            updateRenewMethodFields('tarjeta');
-            RD.toast('Ref. de tarjeta cargada');
-          }
-        }
-      });
-    };
-
     m.el.querySelector('#plans').onclick = e => {
       const c = e.target.closest('[data-id]'); if (!c) return;
       m.el.querySelectorAll('#plans .chip').forEach(x => x.classList.toggle('on', x === c));
       plan = act.find(p => String(p.id) === c.dataset.id); refresh();
     };
-    f.price.oninput = () => m.el.querySelector('#dn').classList.toggle('hidden', +f.price.value >= plan.price);
+    f.price.oninput = () => { if (!isMigration) m.el.querySelector('#dn').classList.toggle('hidden', +f.price.value >= plan.price); };
     m.el.querySelector('#rfmeth').onchange = e => {
       updateRenewMethodFields(e.target.value);
     };
@@ -569,7 +649,14 @@
       e.preventDefault();
       await RD.busy(f.querySelector('button'), async () => {
         try {
-          const r = await RD.api.post(`/members/${memberId}/renew`, {
+          const payload = isMigration ? {
+            plan_id: plan.id,
+            price: +f.price.value || plan.price,
+            is_migration: true,
+            start_date: migStart,
+            end_date: migEnd,
+            promo_note: 'Migración / regularización de socio en curso (sin cobro en caja actual)'
+          } : {
             plan_id: plan.id,
             price: +f.price.value,
             method: f.method.value,
@@ -578,8 +665,9 @@
             start_date: selStart,
             extra_days: extraDays,
             promo_note: promoNote || null
-          });
-          m.close(); RD.beep('done'); RD.toast(`Renovado hasta ${RD.fmtDate(r.end)}`);
+          };
+          const r = await RD.api.post(`/members/${memberId}/renew`, payload);
+          m.close(); RD.beep('done'); RD.toast(`Vigencia activa hasta ${RD.fmtDate(r.end)}`);
           await RD.syncMembers().catch(() => { });
           if (r.receipt) RD.receiptModal(r.receipt);
           onDone && onDone(r);
@@ -607,7 +695,7 @@
         ${can('admin', 'recepcion') ? `<a class="btn sm" target="_blank" href="/admin/cards.html?ids=${m.id}">${RD.icon('idcard')} Carnet QR (PDF / Compartir)</a>` : ''}
         ${can('admin', 'recepcion') ? `<a class="btn sm ghost" target="_blank" href="/admin/cards.html?ids=${m.id}&autodownload=pdf" title="Descargar directamente el PDF del carnet listo para enviar o imprimir">${RD.icon('save')} Guardar Carnet PDF</a>` : ''}
         <button class="btn sm ghost" data-a="att-sheet">${RD.icon('reports')} Ficha Asistencias</button>
-        ${RD.waLink(m.phone, '') ? `<a class="btn sm ok" target="_blank" rel="noopener" href="${RD.waLink(m.phone, 'Hola ' + m.name.split(' ')[0] + ', te escribimos de ' + (RD.pub.gym_name || 'GIMNASIO RED GYM Club') + '. ')}">${RD.icon('whatsapp')} WhatsApp</a>` : ''}
+        ${RD.waLink(m.phone, '') ? `<a class="btn sm ok" target="_blank" rel="noopener" href="${RD.waLink(m.phone, 'Hola ' + m.name.split(' ')[0] + ', te escribimos de ' + (RD.pub.gym_name || 'GIMNASIO RED GYM') + '. ')}">${RD.icon('whatsapp')} WhatsApp</a>` : ''}
         ${can('admin', 'recepcion', 'entrenador') ? `<button class="btn sm" data-a="edit">${RD.icon('edit')} Editar</button>` : ''}
         ${can('admin', 'recepcion', 'entrenador') ? `<button class="btn sm" data-a="routine">${RD.icon('dumbbell')} Asignar rutina</button>` : ''}
         ${can('admin', 'recepcion') ? `<button class="btn sm" data-a="checkin">${RD.icon('check')} Ingreso manual</button>` : ''}
@@ -617,22 +705,18 @@
         ${can('admin', 'recepcion') ? `<button class="btn sm danger" data-a="${m.status === 'blocked' ? 'unblock' : 'block'}">${m.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}</button>` : ''}
         ${can('admin') ? `<button class="btn sm ghost" data-a="${m.status === 'inactive' ? 'reactivate' : 'inactive'}">${m.status === 'inactive' ? 'Reactivar' : 'Dar de baja'}</button>` : ''}
       </div>
-      <h3 class="mt">Datos</h3>
-      <div class="small" style="line-height:1.7">
-        <div style="display:flex;align-items:center;gap:6px">${RD.icon('phone', '', 14)} <span>${esc(m.phone || '—')}</span> <span class="muted">·</span> ${RD.icon('mail', '', 14)} <span>${esc(m.email || '—')}</span></div>
-        <div style="display:flex;align-items:center;gap:6px">${RD.icon('idcard', '', 14)} <span>DNI ${esc(m.dni || '—')}</span> <span class="muted">·</span> ${RD.icon('cake', '', 14)} <span>${RD.fmtDate(m.birth)}</span> <span class="muted">·</span> <span>${esc(m.gender || '')}</span></div>
-        <div style="display:flex;align-items:center;gap:6px">${RD.icon('target', '', 14)} <span>${esc(m.goal || '—')}</span> <span class="muted">· Nivel:</span> <span>${esc(m.level || '—')}</span></div>
-        <div style="display:flex;align-items:center;gap:6px">${RD.icon('first-aid', '', 14)} <span>${esc(m.emergency || '—')}</span></div>
-        <div style="display:flex;align-items:center;gap:6px">${RD.icon('medical', '', 14)} <span>${esc(m.health || 'Sin observaciones')}</span></div>
+      <h3 class="mt">Datos esenciales del socio</h3>
+      <div class="small" style="line-height:1.8">
+        <div style="display:flex;align-items:center;gap:8px">${RD.icon('idcard', '', 14)} <span><b>DNI:</b> ${esc(m.dni || '—')}</span> <span class="muted">·</span> ${RD.icon('phone', '', 14)} <span><b>Teléfono / WhatsApp:</b> ${esc(m.phone || '—')}</span></div>
         ${m.block_reason ? `<div class="bad">Motivo de bloqueo/baja: ${esc(m.block_reason)}</div>` : ''}
-        <div class="muted">Socio desde ${RD.fmtDate(m.created_at)}</div>
+        <div class="muted">Socio registrado el ${RD.fmtDate(m.created_at)}</div>
       </div>
       <h3 class="mt">Rutinas asignadas</h3>
       <div class="list">${d.routines.map(r => `<div class="item"><div class="grow"><b>${esc(r.name)}</b><div class="muted tiny">desde ${RD.fmtDate(r.assigned_at)}</div></div>${can('admin', 'entrenador') ? `<button class="btn sm ghost" data-unassign="${r.assignment_id}">Quitar</button>` : ''}</div>`).join('') || '<div class="muted small">Sin rutina asignada</div>'}</div>
-      ${can('admin', 'recepcion') ? `<h3 class="mt">Pagos</h3>
-      <div class="tbl-wrap"><table><tr><th>Fecha</th><th>Concepto</th><th>Monto</th><th>Método</th><th>Boleta</th></tr>${d.payments.map(p => `<tr style="${p.voided ? 'opacity:.4;text-decoration:line-through' : ''}"><td>${RD.fmtDate(p.day)}</td><td>${esc(p.concept)}</td><td>${money(p.amount)}</td><td>${esc(p.method)}${p.op_code ? ` <span class="tiny" style="color:#c084fc">#${esc(p.op_code)}</span>` : ''}</td><td><button class="icon-btn" data-rcpt="${p.id}" title="Ver e imprimir boleta">${RD.icon('receipt', '', 16)}</button></td></tr>`).join('') || '<tr><td colspan="5" class="muted">Sin pagos</td></tr>'}</table></div>` : ''}
+      ${can('admin', 'recepcion') ? `<h3 class="mt">Pagos registrados en caja</h3>
+      <div class="tbl-wrap"><table><tr><th>Fecha</th><th>Concepto</th><th>Monto</th><th>Método</th><th>Boleta</th></tr>${d.payments.map(p => `<tr style="${p.voided ? 'opacity:.4;text-decoration:line-through' : ''}"><td>${RD.fmtDate(p.day)}</td><td>${esc(p.concept)}</td><td>${money(p.amount)}</td><td>${esc(p.method)}${p.op_code ? ` <span class="tiny" style="color:#c084fc">#${esc(p.op_code)}</span>` : ''}</td><td><button class="icon-btn" data-rcpt="${p.id}" title="Ver e imprimir boleta">${RD.icon('receipt', '', 16)}</button></td></tr>`).join('') || '<tr><td colspan="5" class="muted">Sin pagos en caja</td></tr>'}</table></div>` : ''}
       <h3 class="mt">Membresías</h3>
-      <div class="tbl-wrap"><table><tr><th>Plan</th><th>Desde</th><th>Hasta</th><th>Precio</th></tr>${d.memberships.map(s => `<tr style="${s.status !== 'active' ? 'opacity:.4' : ''}"><td>${esc(s.plan_name)}</td><td>${RD.fmtDate(s.start_date)}</td><td>${RD.fmtDate(s.end_date)}</td><td>${money(s.price)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">—</td></tr>'}</table></div>
+      <div class="tbl-wrap"><table><tr><th>Plan</th><th>Desde</th><th>Hasta</th><th>Precio Ref.</th><th>Detalle</th></tr>${d.memberships.map(s => `<tr style="${s.status !== 'active' ? 'opacity:.4' : ''}"><td>${esc(s.plan_name)}</td><td>${RD.fmtDate(s.start_date)}</td><td>${RD.fmtDate(s.end_date)}</td><td>${money(s.price)}</td><td class="tiny muted">${esc(s.promo_note || 'Inscripción regular')}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">—</td></tr>'}</table></div>
       <h3 class="mt">Medidas y progreso</h3>
       <form class="grid g4" id="mf" style="align-items:end">
         <label class="field"><span>Peso kg</span><input name="weight" type="number" step="0.1"></label>
@@ -709,14 +793,11 @@
     const full = m;
     const d = RD.openModal('Editar socio', `<form id="ef">
       <div class="row gap2 mb"><label class="avatar lg" id="pbox" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">${full.photo ? `<img src="${esc(full.photo)}" alt="">` : RD.icon('camera', '', 26)}</label><div class="grow muted small">Cambiar foto<input id="photo" type="file" accept="image/*" capture="user" class="hidden"></div></div>
-      <label class="field"><span>Nombre</span><input name="name" value="${esc(full.name)}" required ${can('entrenador') ? 'disabled' : ''}></label>
-      <div class="grid g2 keep"><label class="field"><span>DNI</span><input name="dni" value="${esc(full.dni || '')}" ${can('entrenador') ? 'disabled' : ''}></label>
-      <label class="field"><span>Celular</span><input name="phone" value="${esc(full.phone || '')}" ${can('entrenador') ? 'disabled' : ''}></label></div>
-      <div class="grid g2 keep"><label class="field"><span>Nacimiento</span><input name="birth" type="date" value="${esc(full.birth || '')}" ${can('entrenador') ? 'disabled' : ''}></label>
-      <label class="field"><span>Nivel</span><select name="level">${['principiante', 'intermedio', 'avanzado'].map(l => `<option ${l === full.level ? 'selected' : ''}>${l}</option>`).join('')}</select></label></div>
-      <label class="field"><span>Objetivo</span><input name="goal" value="${esc(full.goal || '')}"></label>
-      <label class="field"><span>Emergencia</span><input name="emergency" value="${esc(full.emergency || '')}" ${can('entrenador') ? 'disabled' : ''}></label>
-      <label class="field"><span>Salud / lesiones</span><textarea name="health">${esc(full.health || '')}</textarea></label>
+      <label class="field"><span>Nombres y apellidos *</span><input name="name" value="${esc(full.name)}" required ${can('entrenador') ? 'disabled' : ''}></label>
+      <div class="grid g2 keep">
+        <label class="field"><span>DNI *</span><input name="dni" value="${esc(full.dni || '')}" required ${can('entrenador') ? 'disabled' : ''}></label>
+        <label class="field"><span>Teléfono / WhatsApp</span><input name="phone" value="${esc(full.phone || '')}" ${can('entrenador') ? 'disabled' : ''}></label>
+      </div>
       <button class="btn primary block">Guardar cambios</button></form>`);
     const f = d.el.querySelector('#ef'); let photo = null;
     d.el.querySelector('#pbox').onclick = () => d.el.querySelector('#photo').click();

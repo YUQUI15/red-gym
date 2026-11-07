@@ -23,42 +23,202 @@
     return exListCache;
   }
 
-  // ---------------- LOGIN DEL SOCIO ----------------
+  // ---------------- LOGIN DEL SOCIO + VITRINA WEB PÚBLICA EGANTE (3 ZONAS + LIGHTBOX) ----------------
   function showLogin(err) {
     RD.hub.stop();
     const themeLbl = () => RD.getTheme && RD.getTheme() === 'light' ? `${RD.icon('moon', '', 14)} Modo Oscuro` : `${RD.icon('sun', '', 14)} Modo Claro`;
     root.innerHTML = `
-    <div class="auth">
-      <form class="box" id="mlf" autocomplete="on">
-        <div class="brand">
-          <img class="logo" src="/logo.svg" alt="RED GYM" style="height:48px;width:48px;max-height:48px;max-width:48px;object-fit:contain;margin:0 auto .6rem" width="48" height="48">
-          <h1>GIMNASIO RED GYM</h1>
-          <p>Tu credencial y entrenador digital · Chivay</p>
+    <style>
+      .pub-showcase-shell {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 20px 16px;
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+      .pub-3col {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        align-items: stretch;
+      }
+      @media (min-width: 1024px) {
+        .pub-3col.has-side-panels {
+          grid-template-columns: 320px minmax(360px, 430px) 340px;
+          justify-content: center;
+          align-items: start;
+        }
+      }
+      .pub-side-card {
+        background: var(--bg2);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.22);
+      }
+      .pub-side-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      .pub-side-title {
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .pub-notice-item {
+        padding: 11px 12px;
+        border-radius: 12px;
+        background: var(--bg3);
+        border: 1px solid var(--line);
+        margin-bottom: 10px;
+        transition: transform 0.2s ease;
+      }
+      .pub-notice-item:last-child { margin-bottom: 0; }
+      .pub-slider-wrap {
+        position: relative;
+        overflow: hidden;
+        border-radius: 14px;
+        background: var(--bg3);
+        border: 1px solid var(--line);
+      }
+      .pub-slide {
+        display: none;
+        padding: 14px;
+        animation: pubFade 0.35s ease;
+      }
+      .pub-slide.active { display: block; }
+      @keyframes pubFade { from { opacity: 0.3; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+      .pub-dots {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .pub-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--line);
+        border: none;
+        padding: 0;
+        cursor: pointer;
+      }
+      .pub-dot.active { background: var(--gold); width: 20px; border-radius: 6px; }
+      .pub-lightbox-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(5, 8, 15, 0.72);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        animation: pubFade 0.28s ease;
+      }
+      .pub-lightbox-card {
+        position: relative;
+        width: 100%;
+        max-width: 480px;
+        background: var(--bg2);
+        border: 1.5px solid var(--gold);
+        border-radius: 22px;
+        padding: 24px;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.65);
+        overflow: hidden;
+      }
+      .pub-lightbox-close {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        background: var(--bg3);
+        color: var(--fg);
+        font-weight: 800;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .pub-lightbox-timer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 4px;
+        background: var(--gold);
+        transition: width 1s linear;
+      }
+    </style>
+    <div class="pub-showcase-shell">
+      <div class="pub-3col" id="pub_grid">
+        <!-- LADO IZQUIERDO: AVISOS Y NOTICIAS DEL CLUB (NO INVASIVO) -->
+        <aside class="pub-side-card hidden" id="pub_left_col">
+          <div class="pub-side-head">
+            <span class="pub-side-title">${RD.icon('megaphone', '', 15)} Avisos y Horarios</span>
+            <span class="badge ghost tiny">Comunicados</span>
+          </div>
+          <div id="pub_notices_list"></div>
+        </aside>
+
+        <!-- CENTRO: ACCESO EXCLUSIVO DEL SOCIO Y TARIFAS VIGENTES -->
+        <div>
+          <form class="box" id="mlf" autocomplete="on" style="margin:0 auto">
+            <div class="brand">
+              <img class="logo" src="/logo.svg" alt="RED GYM" style="height:48px;width:48px;max-height:48px;max-width:48px;object-fit:contain;margin:0 auto .6rem" width="48" height="48">
+              <h1>GIMNASIO RED GYM</h1>
+              <p>Tu credencial y entrenador digital · Chivay</p>
+            </div>
+            ${err ? `<div class="banner err">${esc(err)}</div>` : ''}
+            <label class="field">
+              <span>DNI, Usuario o Código de socio</span>
+              <input name="username" placeholder="Tu DNI, usuario o código (ej. 74839201)" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" autofocus>
+            </label>
+            <label class="field">
+              <span>Contraseña</span>
+              <div class="pw"><input name="password" type="password" placeholder="Tu contraseña o DNI" required autocomplete="current-password"><button type="button" class="pw-eye" data-eye aria-label="Mostrar contraseña">${RD.icon('eye', '', 16)}</button></div>
+              <small class="tiny muted">¿Primera vez o regresas después de meses? Tu contraseña inicial es tu <b>DNI</b>. Si olvidaste tu clave, tu DNI siempre te permite ingresar.</small>
+            </label>
+            <button class="btn primary block" type="submit">Ingresar a mi App</button>
+            <p class="center small mt2"><a href="#" id="forgot">¿Olvidaste tu contraseña?</a></p>
+            <button type="button" class="btn ghost sm mt2 block" id="btn_login_install" style="display:flex;align-items:center;justify-content:center;gap:6px">${RD.icon('smartphone', '', 16)} ¿Cómo instalar la App en tu Celular o PC?</button>
+            <p class="center muted tiny mt2">Este dispositivo recordará tu sesión de forma segura.</p>
+            <div class="card flat mt center small muted">
+              ¿Aún no estás registrado? Acércate a recepción en Calle Piérola con Garcilaso de la Vega para obtener tu código y credencial.
+            </div>
+            <p class="center muted tiny mt">Personal del gimnasio: <a href="/admin/">Acceso al panel</a> · <a href="#" id="loginlegal">Reglamento y Privacidad</a></p>
+            <div class="center mt2">
+              <button type="button" class="btn ghost sm" id="loginthemebtn" data-theme-toggle style="display:inline-flex;align-items:center;gap:6px">${themeLbl()}</button>
+            </div>
+            <div class="center muted tiny mt2">© ${new Date().getFullYear()} GIMNASIO RED GYM · Chivay · Derechos Reservados</div>
+          </form>
         </div>
-        ${err ? `<div class="banner err">${esc(err)}</div>` : ''}
-        <label class="field">
-          <span>DNI, Usuario o Código de socio</span>
-          <input name="username" placeholder="Tu DNI, usuario o código (ej. 74839201)" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" autofocus>
-        </label>
-        <label class="field">
-          <span>Contraseña</span>
-          <div class="pw"><input name="password" type="password" placeholder="Tu contraseña o DNI" required autocomplete="current-password"><button type="button" class="pw-eye" data-eye aria-label="Mostrar contraseña">${RD.icon('eye', '', 16)}</button></div>
-          <small class="tiny muted">¿Primera vez o regresas después de meses? Tu contraseña inicial es tu <b>DNI</b>. Si olvidaste tu clave, tu DNI siempre te permite ingresar.</small>
-        </label>
-        <button class="btn primary block" type="submit">Ingresar a mi App</button>
-        <p class="center small mt2"><a href="#" id="forgot">¿Olvidaste tu contraseña?</a></p>
-        <button type="button" class="btn ghost sm mt2 block" id="btn_login_install" style="display:flex;align-items:center;justify-content:center;gap:6px">${RD.icon('smartphone', '', 16)} ¿Cómo instalar la App en tu Celular o PC?</button>
-        <p class="center muted tiny mt2">Este dispositivo recordará tu sesión de forma segura.</p>
-        <div class="card flat mt center small muted">
-          ¿Aún no estás registrado? Acércate a recepción en Calle Piérola con Garcilaso de la Vega para obtener tu código y credencial.
-        </div>
-        <p class="center muted tiny mt">Personal del gimnasio: <a href="/admin/">Acceso al panel</a> · <a href="#" id="loginlegal">Reglamento y Privacidad</a></p>
-        <div class="center mt2">
-          <button type="button" class="btn ghost sm" id="loginthemebtn" data-theme-toggle style="display:inline-flex;align-items:center;gap:6px">${themeLbl()}</button>
-        </div>
-        <div class="center muted tiny mt2">© ${new Date().getFullYear()} GIMNASIO RED GYM · Chivay · Derechos Reservados</div>
-      </form>
-    </div>`;
+
+        <!-- LADO DERECHO: CARRUSEL PUBLICITARIO Y PLANES / PROMOCIONES -->
+        <aside class="pub-side-card hidden" id="pub_right_col">
+          <div class="pub-side-head">
+            <span class="pub-side-title">${RD.icon('tag', '', 15)} Promociones y Planes</span>
+            <span class="badge warn tiny">En Vivo</span>
+          </div>
+          <div id="pub_carousel_box"></div>
+          <div id="pub_plans_box" class="mt"></div>
+        </aside>
+      </div>
+    </div>
+    <div id="pub_lightbox_host"></div>`;
 
     const ltb = document.getElementById('loginthemebtn');
     ltb.onclick = () => { RD.toggleTheme(); ltb.innerHTML = themeLbl(); };
@@ -68,6 +228,119 @@
     if (lleg) lleg.onclick = e => { e.preventDefault(); RD.openLegalModal('normas'); };
     root.querySelector('[data-eye]').onclick = e => { const i = e.currentTarget.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'; };
     document.getElementById('forgot').onclick = e => { e.preventDefault(); RD.hub.forgot(); };
+
+    // Cargar Showcase Público (Avisos Izquierda, Carrusel Derecha, Planes y Lightbox)
+    api.get('/public/showcase').then(sc => {
+      if (!sc) return;
+      const anns = sc.announcements || [];
+      const plans = sc.plans || [];
+      const notices = anns.filter(a => a.web_spot === 'normal' || (!a.web_spot && a.kind !== 'promo'));
+      const slides = anns.filter(a => a.web_spot === 'carousel' || (a.kind === 'promo' && a.web_spot !== 'lightbox'));
+      const lightboxItem = anns.find(a => a.web_spot === 'lightbox');
+
+      const grid = document.getElementById('pub_grid');
+      const leftCol = document.getElementById('pub_left_col');
+      const rightCol = document.getElementById('pub_right_col');
+
+      if (notices.length) {
+        leftCol.classList.remove('hidden');
+        grid.classList.add('has-side-panels');
+        document.getElementById('pub_notices_list').innerHTML = notices.slice(0, 4).map(n => `
+          <div class="pub-notice-item">
+            <div class="row between gap mb2">
+              <b class="small">${esc(n.title)}</b>
+              ${n.priority === 'importante' ? '<span class="badge bad tiny">Importante</span>' : '<span class="badge ghost tiny">Aviso</span>'}
+            </div>
+            ${n.body ? `<div class="tiny muted" style="line-height:1.45">${esc(n.body)}</div>` : ''}
+          </div>
+        `).join('');
+      }
+
+      if (slides.length || plans.length) {
+        rightCol.classList.remove('hidden');
+        grid.classList.add('has-side-panels');
+        if (slides.length) {
+          const cBox = document.getElementById('pub_carousel_box');
+          cBox.innerHTML = `
+            <div class="pub-slider-wrap">
+              ${slides.map((s, idx) => `
+                <div class="pub-slide ${idx === 0 ? 'active' : ''}" data-sidx="${idx}">
+                  ${s.image_url ? `<img src="${esc(s.image_url)}" alt="${esc(s.title)}" style="width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:8px">` : ''}
+                  <div class="badge warn tiny mb2">🔥 Promoción Destacada</div>
+                  <h4 style="margin:2px 0 6px">${esc(s.title)}</h4>
+                  <p class="tiny muted" style="margin:0 0 10px;line-height:1.45">${esc(s.body)}</p>
+                  ${s.cta ? `<a class="btn sm primary block" href="${esc(s.cta.url)}" target="_blank" rel="noopener">${esc(s.cta.label)}</a>` : ''}
+                </div>
+              `).join('')}
+            </div>
+            ${slides.length > 1 ? `<div class="pub-dots">${slides.map((_, idx) => `<button type="button" class="pub-dot ${idx === 0 ? 'active' : ''}" data-dot="${idx}"></button>`).join('')}</div>` : ''}
+          `;
+          if (slides.length > 1) {
+            let curIdx = 0;
+            const setSlide = (i) => {
+              curIdx = i;
+              cBox.querySelectorAll('.pub-slide').forEach((el, k) => el.classList.toggle('active', k === i));
+              cBox.querySelectorAll('.pub-dot').forEach((el, k) => el.classList.toggle('active', k === i));
+            };
+            cBox.querySelectorAll('[data-dot]').forEach(b => b.onclick = () => setSlide(+b.dataset.dot));
+            setInterval(() => { if (document.body.contains(cBox)) setSlide((curIdx + 1) % slides.length); }, 5500);
+          }
+        }
+        if (plans.length) {
+          document.getElementById('pub_plans_box').innerHTML = `
+            <div class="tiny bold muted mb2" style="text-transform:uppercase;letter-spacing:.05em">Tarifas y Planes Vigentes</div>
+            <div class="list">
+              ${plans.slice(0, 5).map(p => `
+                <div class="item" style="padding:8px 10px">
+                  <div class="grow">
+                    <b class="small">${esc(p.name)}</b>
+                    ${p.promo_label ? `<div class="tiny" style="color:#f59e0b;font-weight:700">🏷️ ${esc(p.promo_label)}</div>` : `<div class="tiny muted">${p.months ? p.months + ' mes(es)' : p.days + ' día(s)'}</div>`}
+                  </div>
+                  <span class="gold bold">${money(p.price)}</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+      }
+
+      if (lightboxItem && !sessionStorage.getItem('rd_lb_seen_' + lightboxItem.id)) {
+        const lbHost = document.getElementById('pub_lightbox_host');
+        let secLeft = 12;
+        lbHost.innerHTML = `
+          <div class="pub-lightbox-backdrop" id="pub_lb_bg">
+            <div class="pub-lightbox-card">
+              <button type="button" class="pub-lightbox-close" id="pub_lb_close" title="Cerrar anuncio">✕</button>
+              <span class="badge warn mb2">✨ Anuncio Destacado</span>
+              <h2 style="margin:4px 0 8px">${esc(lightboxItem.title)}</h2>
+              ${lightboxItem.image_url ? `<img src="${esc(lightboxItem.image_url)}" alt="${esc(lightboxItem.title)}" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin:8px 0">` : ''}
+              <p class="small" style="line-height:1.5;color:var(--fg)">${esc(lightboxItem.body)}</p>
+              <div class="row between align-center mt">
+                <span class="tiny muted" id="pub_lb_cnt">Se cierra automáticamente en ${secLeft}s</span>
+                ${lightboxItem.cta ? `<a class="btn primary sm" href="${esc(lightboxItem.cta.url)}" target="_blank" rel="noopener">${esc(lightboxItem.cta.label)}</a>` : `<button type="button" class="btn sm ghost" id="pub_lb_ok">Entendido</button>`}
+              </div>
+              <div class="pub-lightbox-timer" id="pub_lb_bar" style="width:100%"></div>
+            </div>
+          </div>
+        `;
+        const closeLb = () => {
+          sessionStorage.setItem('rd_lb_seen_' + lightboxItem.id, '1');
+          lbHost.innerHTML = '';
+        };
+        document.getElementById('pub_lb_close').onclick = closeLb;
+        const okBtn = document.getElementById('pub_lb_ok');
+        if (okBtn) okBtn.onclick = closeLb;
+        document.getElementById('pub_lb_bg').onclick = e => { if (e.target.id === 'pub_lb_bg') closeLb(); };
+        const iv = setInterval(() => {
+          secLeft--;
+          const cntEl = document.getElementById('pub_lb_cnt');
+          const barEl = document.getElementById('pub_lb_bar');
+          if (!cntEl || secLeft <= 0) { clearInterval(iv); closeLb(); return; }
+          cntEl.textContent = `Se cierra automáticamente en ${secLeft}s`;
+          if (barEl) barEl.style.width = `${(secLeft / 12) * 100}%`;
+        }, 1000);
+      }
+    }).catch(() => {});
 
     document.getElementById('mlf').onsubmit = async e => {
       e.preventDefault();

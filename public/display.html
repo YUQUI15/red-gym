@@ -1025,13 +1025,13 @@
         <img src="/logo-red-gym.png?v=6.6" alt="GIMNASIO RED GYM" style="height:40px;width:40px;object-fit:contain;flex-shrink:0">
         <div>
           <div class="brand-title" id="gym_name">GIMNASIO RED GYM</div>
-          <div class="brand-sub" id="gym_slogan">TV MONITOREO CCTV · ACCESOS QR · CHIVAY</div>
+          <div class="brand-sub" id="gym_slogan">MONITOR / TABLET DE RECEPCIÓN · ACCESOS QR · CHIVAY</div>
         </div>
       </div>
 
       <div class="mode-status-bar">
         <span class="rec-dot"></span>
-        <span id="tv_status_label">PANTALLA DE RECEPCIÓN Y CARTELERA EN VIVO</span>
+        <span id="tv_status_label">PANTALLA DE BIENVENIDA Y RECEPCIÓN EN VIVO</span>
       </div>
 
       <div class="top-actions">
@@ -1039,9 +1039,8 @@
           <div class="clock-time" id="clock_time">--:--:--</div>
           <div class="clock-date" id="clock_date">--</div>
         </div>
-        <button class="ctrl-btn" id="btn_mode_cctv" title="Alternar entre Modo Pantalla de Recepción y Modo con Cámaras CCTV">
-          <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-          <span id="mode_btn_txt">Activar Cámaras CCTV</span>
+        <button class="ctrl-btn" id="btn_mode_cctv" style="display:none" title="Modo Recepción">
+          <span id="mode_btn_txt">Recepción</span>
         </button>
         <button class="ctrl-btn" id="btn_trigger_promo" title="Mostrar Spot Publicitario de Planes Ahora (Tecla P)">
           <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -1183,12 +1182,12 @@
       const btnCfgTv = document.getElementById('btn_cfg_tv');
       const cfgBackdrop = document.getElementById('cfg_backdrop');
 
-      // ---------------- Estado de Configuración de TV + CCTV ----------------
+      // ---------------- Estado de Configuración de Monitor / Tablet de Recepción ----------------
       let tvConfig = {
-        tvMode: localStorage.getItem('rd_tv_mode') || 'signage_only', // 'signage_only' | 'cctv_rotative'
-        camSource: localStorage.getItem('rd_cam_source') || 'sim_grid', // 'sim_grid' | 'usb_capture' | 'custom_urls'
-        usbDeviceId: localStorage.getItem('rd_usb_device_id') || '',
-        urls: JSON.parse(localStorage.getItem('rd_cam_urls') || '["","","",""]'),
+        tvMode: 'signage_only', // Visualización directa en Monitor de Escritorio o Tablet de Recepción
+        camSource: 'sim_grid',
+        usbDeviceId: '',
+        urls: ["","","",""],
         promoIntervalSec: Number(localStorage.getItem('rd_promo_interval') ?? 120),
         promoDurationSec: Number(localStorage.getItem('rd_promo_duration') ?? 16)
       };
