@@ -242,16 +242,27 @@
       const leftCol = document.getElementById('pub_left_col');
       const rightCol = document.getElementById('pub_right_col');
 
-      if (notices.length) {
+      if (notices.length || sc.gym?.whatsapp_community_url) {
         leftCol.classList.remove('hidden');
         grid.classList.add('has-side-panels');
-        document.getElementById('pub_notices_list').innerHTML = notices.slice(0, 4).map(n => `
+        const commBtn = sc.gym?.whatsapp_community_url ? `
+          <a href="${esc(sc.gym.whatsapp_community_url)}" target="_blank" rel="noopener" class="btn sm ok block mb" style="display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none">
+            💬 Unirse a la Comunidad Oficial WhatsApp
+          </a>
+        ` : '';
+        document.getElementById('pub_notices_list').innerHTML = commBtn + notices.slice(0, 4).map(n => `
           <div class="pub-notice-item">
             <div class="row between gap mb2">
               <b class="small">${esc(n.title)}</b>
-              ${n.priority === 'importante' ? '<span class="badge bad tiny">Importante</span>' : '<span class="badge ghost tiny">Aviso</span>'}
+              ${n.priority === 'importante' ? '<span class="badge bad tiny">Importante</span>' : '<span class="badge ghost tiny">Comunicado</span>'}
             </div>
+            ${n.image_url ? `<img src="${esc(n.image_url)}" alt="${esc(n.title)}" style="width:100%;max-height:110px;object-fit:cover;border-radius:8px;margin:6px 0">` : ''}
             ${n.body ? `<div class="tiny muted" style="line-height:1.45">${esc(n.body)}</div>` : ''}
+            <div class="row wrap gap mt">
+              ${n.video_url ? `<a class="btn sm ghost" style="font-size:.72rem;padding:4px 8px" href="${esc(n.video_url)}" target="_blank" rel="noopener">🎬 Ver Video</a>` : ''}
+              ${n.doc_url ? `<a class="btn sm ghost" style="font-size:.72rem;padding:4px 8px" href="${esc(n.doc_url)}" target="_blank" rel="noopener" download>${esc(n.doc_label || '📄 Descargar PDF')}</a>` : ''}
+              ${n.cta ? `<a class="btn sm ghost" style="font-size:.72rem;padding:4px 8px" href="${esc(n.cta.url)}" target="_blank" rel="noopener">🔗 ${esc(n.cta.label)}</a>` : ''}
+            </div>
           </div>
         `).join('');
       }
@@ -266,10 +277,15 @@
               ${slides.map((s, idx) => `
                 <div class="pub-slide ${idx === 0 ? 'active' : ''}" data-sidx="${idx}">
                   ${s.image_url ? `<img src="${esc(s.image_url)}" alt="${esc(s.title)}" style="width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:8px">` : ''}
-                  <div class="badge warn tiny mb2">🔥 Promoción Destacada</div>
+                  ${s.video_url && /\.mp4($|\?)/i.test(s.video_url) ? `<video src="${esc(s.video_url)}" controls muted playsinline style="width:100%;max-height:150px;border-radius:10px;margin-bottom:8px"></video>` : ''}
+                  <div class="badge warn tiny mb2">🔥 Destacado Multimedia</div>
                   <h4 style="margin:2px 0 6px">${esc(s.title)}</h4>
                   <p class="tiny muted" style="margin:0 0 10px;line-height:1.45">${esc(s.body)}</p>
-                  ${s.cta ? `<a class="btn sm primary block" href="${esc(s.cta.url)}" target="_blank" rel="noopener">${esc(s.cta.label)}</a>` : ''}
+                  <div class="row wrap gap">
+                    ${s.video_url && !/\.mp4($|\?)/i.test(s.video_url) ? `<a class="btn sm ghost block" href="${esc(s.video_url)}" target="_blank" rel="noopener">🎬 Reproducir Video</a>` : ''}
+                    ${s.doc_url ? `<a class="btn sm ghost block" href="${esc(s.doc_url)}" target="_blank" rel="noopener" download>${esc(s.doc_label || '📄 Descargar PDF')}</a>` : ''}
+                    ${s.cta ? `<a class="btn sm primary block" href="${esc(s.cta.url)}" target="_blank" rel="noopener">${esc(s.cta.label)}</a>` : ''}
+                  </div>
                 </div>
               `).join('')}
             </div>
