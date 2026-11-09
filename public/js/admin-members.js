@@ -51,19 +51,30 @@
   RD.views.members = {
     async render(view) {
       let filter = 'all', term = '';
+      const unlocked = RD.security && RD.security.isUnlocked();
       view.innerHTML = `
       <div class="row gap wrap mb">
         <input id="q" class="grow" placeholder="Buscar por nombre, DNI, celular o código" style="min-width:200px">
+        <button class="btn sm ${unlocked ? 'ok' : 'ghost'}" id="btn_toggle_mask" title="Desbloquear o cifrar visualización de DNI y teléfonos en pantalla">
+          ${unlocked ? `🔓 Datos Visibles (${RD.security.remainingMin()}m) · Cifrar` : `🔐 DNI/Celular Cifrados · Ver con PIN`}
+        </button>
         ${can('admin', 'recepcion') ? `<a class="btn" href="/admin/cards.html" target="_blank" style="text-decoration:none">${RD.icon('idcard', '', 15)} Carnets QR</a><button class="btn primary" id="new">＋ Nuevo socio</button>` : ''}
       </div>
       <div class="chips mb" id="chips">${FILTERS.map(([k, l]) => `<span class="chip ${k === 'all' ? 'on' : ''}" data-f="${k}">${l}</span>`).join('')}</div>
-      <div class="card"><div class="muted small mb" id="cnt"></div><div class="list" id="list"></div></div>`;
+      <div class="card"><div class="row between wrap gap mb"><div class="muted small" id="cnt"></div><div class="tiny muted">${unlocked ? '🟢 Visualización completa habilitada con PIN del Propietario' : '🛡️ Modo Privacidad Activo: DNI y celulares protegidos contra capturas (Uso exclusivo para cuenta y QR)'}</div></div><div class="list" id="list"></div></div>`;
       const list = view.querySelector('#list');
+      const btnMask = view.querySelector('#btn_toggle_mask');
+      if (btnMask) {
+        btnMask.onclick = () => {
+          if (RD.security.isUnlocked()) RD.security.lock();
+          else RD.security.requirePin('Visualizar DNI y teléfonos completos en padrón de socios');
+        };
+      }
       async function load() {
         const d = await RD.api.get(`/members?filter=${filter}&q=${encodeURIComponent(term)}&limit=200`);
         view.querySelector('#cnt').textContent = `${d.total} socio${d.total === 1 ? '' : 's'}${d.total > 200 ? ' (mostrando 200, usa el buscador)' : ''}`;
         list.innerHTML = d.members.map(m => `<div class="item click" data-id="${m.id}">${avatar(m)}<div class="grow"><b>${esc(m.name)}</b>
-          <div class="muted small">${esc(m.code)} · DNI ${esc(m.dni || '—')}${m.plan_name ? ' · ' + esc(m.plan_name) : ''}</div></div>
+          <div class="muted small">${esc(m.code)} · DNI ${esc(RD.security ? RD.security.maskDni(m.dni) : (m.dni || '—'))}${m.phone ? ' · Cel ' + esc(RD.security ? RD.security.maskPhone(m.phone) : m.phone) : ''}${m.plan_name ? ' · ' + esc(m.plan_name) : ''}</div></div>
           <div class="right">${badge(m)}<div class="muted tiny mt2">${m.end_date ? 'vence ' + RD.fmtDate(m.end_date) : ''}</div></div></div>`).join('') || '<div class="empty">No hay socios con ese criterio</div>';
       }
       view.querySelector('#q').oninput = RD.debounce(e => { term = e.target.value.trim(); load().catch(err => RD.toast(err.message, 'err')); }, 250);
@@ -705,9 +716,14 @@
         ${can('admin', 'recepcion') ? `<button class="btn sm danger" data-a="${m.status === 'blocked' ? 'unblock' : 'block'}">${m.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}</button>` : ''}
         ${can('admin') ? `<button class="btn sm ghost" data-a="${m.status === 'inactive' ? 'reactivate' : 'inactive'}">${m.status === 'inactive' ? 'Reactivar' : 'Dar de baja'}</button>` : ''}
       </div>
-      <h3 class="mt">Datos esenciales del socio</h3>
-      <div class="small" style="line-height:1.8">
-        <div style="display:flex;align-items:center;gap:8px">${RD.icon('idcard', '', 14)} <span><b>DNI:</b> ${esc(m.dni || '—')}</span> <span class="muted">·</span> ${RD.icon('phone', '', 14)} <span><b>Teléfono / WhatsApp:</b> ${esc(m.phone || '—')}</span></div>
+      <div class="row between wrap gap mt">
+        <h3 style="margin:0">Datos esenciales del socio <span class="tiny muted" style="font-weight:400">(Uso exclusivo para cuenta, QR y vigencia)</span></h3>
+        <button type="button" class="btn sm ghost" id="btn_member_pin_reveal">
+          ${RD.security && RD.security.isUnlocked() ? '🔒 Ocultar / Cifrar DNI y Celular' : '🔓 Ver DNI y Celular Completos (PIN)'}
+        </button>
+      </div>
+      <div class="small mt2" style="line-height:1.8">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${RD.icon('idcard', '', 14)} <span><b>DNI:</b> ${esc(RD.security ? RD.security.maskDni(m.dni) : (m.dni || '—'))}</span> <span class="muted">·</span> ${RD.icon('phone', '', 14)} <span><b>Teléfono / WhatsApp:</b> ${esc(RD.security ? RD.security.maskPhone(m.phone) : (m.phone || '—'))}</span></div>
         ${m.block_reason ? `<div class="bad">Motivo de bloqueo/baja: ${esc(m.block_reason)}</div>` : ''}
         <div class="muted">Socio registrado el ${RD.fmtDate(m.created_at)}</div>
       </div>
@@ -741,12 +757,29 @@
           } catch (err) { RD.toast(err.message, 'err'); }
         }
       });
+      const btnPinRev = el.querySelector('#btn_member_pin_reveal');
+      if (btnPinRev) {
+        btnPinRev.onclick = () => {
+          if (RD.security && RD.security.isUnlocked()) {
+            RD.security.lock();
+            redraw();
+          } else if (RD.security) {
+            RD.security.requirePin(`Revelar DNI y celular de ${m.name}`, () => redraw());
+          }
+        };
+      }
       el.querySelector('#acts').onclick = async e => {
         const a = e.target.closest('[data-a]')?.dataset.a; if (!a) return;
         try {
           if (a === 'renew') RD.renewDialog(id, m.name, redraw);
           else if (a === 'att-sheet') { if (RD.memberAttendanceSheetModal) RD.memberAttendanceSheetModal(id); return; }
-          else if (a === 'edit') editDialog(m, redraw);
+          else if (a === 'edit') {
+            if (RD.security && !RD.security.isUnlocked()) {
+              RD.security.requirePin(`Editar datos personales de ${m.name}`, () => editDialog(m, redraw));
+            } else {
+              editDialog(m, redraw);
+            }
+          }
           else if (a === 'routine') assignRoutineDialog(id, redraw);
           else if (a === 'checkin') {
             if (await RD.confirm('Ingreso manual', `¿Registrar ingreso de ${m.name} sin QR?`, 'Registrar')) {

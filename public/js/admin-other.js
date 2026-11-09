@@ -2463,7 +2463,23 @@ function verEstado() {
         };
 
         // Handlers de botones de exportación
-        view.querySelector('#btnprint').onclick = () => printCurrentReport(d, channel, from, to, settings);
+        view.querySelector('#btnprint').onclick = () => {
+          const doPrint = async () => {
+            try {
+              await RD.api.post('/security/log-export', {
+                file: `Reporte_${channel}_${from}_al_${to}.pdf`,
+                type: `Impresión / Exportación PDF (${channel})`
+              });
+            } catch {}
+            printCurrentReport(d, channel, from, to, settings);
+            if (RD.security) RD.security.notifyDownload(`Reporte_${channel}_${from}_al_${to}.pdf`, 'Reporte Ejecutivo PDF');
+          };
+          if (RD.security && !RD.security.isUnlocked()) {
+            RD.security.requirePin(`Imprimir o exportar Reporte PDF (${channel})`, doPrint);
+          } else {
+            doPrint();
+          }
+        };
         view.querySelector('#btngsheets').onclick = () => RD.openGoogleSheetsDirect();
         view.querySelector('#btngsheets_guide').onclick = () => googleSheetsSyncModal(settings);
         view.querySelector('#btnexcel').onclick = async () => {
@@ -4416,6 +4432,22 @@ function verEstado() {
           </label>
         </div>
 
+        <h3 class="mt">🔐 Seguridad de Datos, PIN Especial del Propietario y WhatsApp Corporativo</h3>
+        <div class="banner mb small" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.35);line-height:1.45">
+          📱 <b>Uso Exclusivo de WhatsApp Business del Gimnasio en Recepción:</b> Dado que la computadora de recepción es utilizada tanto por el dueño como por los trabajadores de turno (para atender consultas, enviar recibos y publicar avisos), <b>la cuenta de WhatsApp vinculada en el equipo debe ser exclusiva del negocio</b> y nunca el WhatsApp personal del propietario, garantizando total privacidad.
+        </div>
+        <div class="grid g2 keep">
+          <label class="field"><span>PIN Especial del Propietario (Ver DNI/Celular y Descargas) *</span>
+            <input name="owner_data_pin" type="password" inputmode="numeric" maxlength="12" value="${esc(s.owner_data_pin || '2026')}" placeholder="Ej. 2026" required>
+          </label>
+          <label class="field"><span>WhatsApp del Dueño para Alertas de Descarga *</span>
+            <input name="owner_alert_phone" value="${esc(s.owner_alert_phone || s.gym_phone || '')}" placeholder="9XXXXXXXX" required>
+          </label>
+        </div>
+        <p class="tiny muted" style="margin-top:4px">
+          El sistema cifra por defecto los DNI (<code>•••458</code>) y celulares (<code>954•••867</code>) en pantalla y solicita este PIN antes de permitir cualquier descarga de archivos Excel, CSV, PDF o Base de Datos, registrando quién descargó qué archivo y a qué hora.
+        </p>
+
         <button class="btn primary block mt">Guardar Ajustes</button>
       </form>
     </div>`;
@@ -4901,6 +4933,9 @@ function verEstado() {
           <button class="btn primary" id="btn-security-audit" style="display:inline-flex; align-items:center; gap:6px;">
             ${RD.icon('shield')} Ver Auditoría de Ciberseguridad y Bitácora
           </button>
+          <button class="btn ok" id="btn-privacy-alerts" style="display:inline-flex; align-items:center; gap:6px;">
+            ${RD.icon('lock')} Alertas de Descargas y PIN de Datos
+          </button>
           <button class="btn" id="btn-admin-legal" style="display:inline-flex; align-items:center; gap:6px;">
             ${RD.icon('file-text')} Reglamento, Privacidad (Ley 29733) y Derechos
           </button>
@@ -5079,6 +5114,8 @@ function verEstado() {
     // 6. Auditoría de Ciberseguridad y Centro Legal
     const btnLegal = el.querySelector('#btn-admin-legal');
     if (btnLegal) btnLegal.onclick = () => RD.openLegalModal('normas');
+    const btnPrivAlerts = el.querySelector('#btn-privacy-alerts');
+    if (btnPrivAlerts) btnPrivAlerts.onclick = () => RD.security && RD.security.openPrivacyModal();
     const btnSunatLegal = el.querySelector('#btn-sunat-legal');
     if (btnSunatLegal) btnSunatLegal.onclick = () => RD.openLegalModal('sunat');
 

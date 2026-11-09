@@ -483,6 +483,13 @@
   };
 
   RD.downloadAuth = async (url, defaultFilename = 'descarga') => {
+    const isProtectedExport = /\/(backup|reports\/export)/.test(url);
+    if (isProtectedExport && RD.security && !RD.security.isUnlocked()) {
+      const ok = await new Promise(resolve => {
+        RD.security.requirePin(`Autorizar descarga de archivo confidencial (${defaultFilename})`, () => resolve(true), () => resolve(false));
+      });
+      if (!ok) throw new Error('Descarga cancelada: Se requiere el PIN Especial del Propietario.');
+    }
     const t = localStorage.getItem('rd_staff_token') || localStorage.getItem('rd_user_token');
     const headers = {};
     if (t) headers.Authorization = 'Bearer ' + t;
@@ -507,8 +514,266 @@
     document.body.appendChild(a);
     a.click();
     setTimeout(() => { a.remove(); URL.revokeObjectURL(blobUrl); }, 1000);
+    if (isProtectedExport && RD.security) {
+      RD.security.notifyDownload(filename, url.includes('excel') ? 'Excel (.xlsx)' : url.includes('csv') ? 'CSV' : url.includes('json') ? 'Respaldo JSON' : 'Base de Datos (.db)');
+    }
     return filename;
   };
+
+  // ---------- Sistema de Protección de Datos Sensibles, Cifrado Visual, PIN del Propietario y Marca de Agua ----------
+  const PIN_UNLOCK_KEY = 'rd_pin_unlocked_until';
+  const PIN_OWNER_PHONE_KEY = 'rd_owner_alert_phone';
+  RD.security = {
+    isUnlocked() {
+      const until = Number(sessionStorage.getItem(PIN_UNLOCK_KEY) || 0);
+      return until > Date.now();
+    },
+    remainingMin() {
+      const until = Number(sessionStorage.getItem(PIN_UNLOCK_KEY) || 0);
+      return Math.max(0, Math.ceil((until - Date.now()) / 60000));
+    },
+    lock(silent = false) {
+      sessionStorage.removeItem(PIN_UNLOCK_KEY);
+      RD.security.updateTopbarButton();
+      window.dispatchEvent(new CustomEvent('rd:privacy-change', { detail: { unlocked: false } }));
+      if (!silent && RD.toast) RD.toast('🔒 Modo Privacidad Activo: DNI y teléfonos cifrados en pantalla', 'ok');
+      if (RD.currentView === 'members' && RD.go) RD.go('members');
+    },
+    maskDni(dni) {
+      const s = String(dni || '').trim();
+      if (!s) return '—';
+      if (RD.security.isUnlocked()) return s;
+      if (s.length <= 3) return '***';
+      return '•••' + s.slice(-3);
+    },
+    maskPhone(phone) {
+      const s = String(phone || '').trim();
+      if (!s) return '—';
+      if (RD.security.isUnlocked()) return s;
+      const digits = s.replace(/\D/g, '');
+      if (digits.length < 6) return '•••-•••';
+      return digits.slice(0, 3) + '•••' + digits.slice(-3);
+    },
+    updateTopbarButton() {
+      const btn = document.getElementById('btn_privacy_pin');
+      if (!btn) return;
+      const unlocked = RD.security.isUnlocked();
+      if (unlocked) {
+        btn.style.background = 'rgba(16, 185, 129, 0.16)';
+        btn.style.borderColor = 'rgba(16, 185, 129, 0.45)';
+        btn.style.color = '#10b981';
+        btn.innerHTML = `${RD.icon('check', '', 14)} <span>🔓 Datos Visibles (${RD.security.remainingMin()}m)</span>`;
+        btn.title = 'Visualización completa desbloqueada con PIN del Propietario. Clic para bloquear o ver alertas de descargas.';
+      } else {
+        btn.style.background = '';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        btn.innerHTML = `${RD.icon('lock', '', 14)} <span>🔐 Privacidad / PIN</span>`;
+        btn.title = 'Modo Privacidad Activo (DNI y teléfonos cifrados contra capturas). Clic para desbloquear con PIN del Dueño o auditar descargas.';
+      }
+    },
+    requirePin(reason = 'Visualización completa de datos confidenciales', onSuccess, onCancel) {
+      if (RD.security.isUnlocked()) {
+        if (onSuccess) onSuccess();
+        return;
+      }
+      const m = RD.openModal('🔐 PIN Especial del Propietario — Protección de Datos', `
+        <form id="pin_verify_form">
+          <div class="banner mb" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);color:var(--fg);font-size:12.5px;line-height:1.45">
+            🛡️ <b>Escudo de Confidencialidad Activo:</b> Por seguridad contra capturas de pantalla o extracciones no autorizadas en recepción, los números de DNI, teléfonos y descargas de archivos están protegidos.<br>
+            <span class="muted">Acción solicitada:</span> <b>${RD.esc(reason)}</b>
+          </div>
+          <label class="field">
+            <span>Ingresa el PIN Especial del Propietario / Administración *</span>
+            <input name="pin" id="pin_inp" type="password" inputmode="numeric" maxlength="12" placeholder="••••" required autofocus style="font-size:1.35rem;letter-spacing:6px;text-align:center;font-weight:900">
+          </label>
+          <p class="tiny muted mb">
+            Nota: Todo desbloqueo, intento fallido o descarga de archivos queda grabado con fecha, hora y usuario en la Bitácora de Seguridad y notifica al propietario.
+          </p>
+          <div class="row end gap">
+            <button type="button" class="btn ghost" id="pin_cancel">Cancelar</button>
+            <button type="submit" class="btn primary">${RD.icon('lock', '', 15)} Verificar PIN y Desbloquear (15 min)</button>
+          </div>
+        </form>
+      `, { onClose: () => { if (onCancel) onCancel(); } });
+
+      const inp = m.el.querySelector('#pin_inp');
+      setTimeout(() => inp && inp.focus(), 60);
+      m.el.querySelector('#pin_cancel').onclick = () => { m.close(); if (onCancel) onCancel(); };
+      m.el.querySelector('#pin_verify_form').onsubmit = async e => {
+        e.preventDefault();
+        const pin = inp.value.trim();
+        if (!pin) return;
+        await RD.busy(m.el.querySelector('button[type=submit]'), async () => {
+          try {
+            const r = await RD.api.post('/security/verify-pin', { pin, reason });
+            sessionStorage.setItem(PIN_UNLOCK_KEY, String(r.unlocked_until || (Date.now() + 15 * 60 * 1000)));
+            if (r.owner_alert_phone) localStorage.setItem(PIN_OWNER_PHONE_KEY, r.owner_alert_phone);
+            RD.security.updateTopbarButton();
+            window.dispatchEvent(new CustomEvent('rd:privacy-change', { detail: { unlocked: true } }));
+            m.root.remove();
+            document.body.classList.remove('no-scroll');
+            RD.toast('🔓 PIN verificado: Visualización completa y descargas habilitadas por 15 min', 'ok');
+            if (RD.currentView === 'members' && RD.go) RD.go('members');
+            if (onSuccess) onSuccess(r);
+          } catch (err) {
+            RD.toast(err.message || 'PIN Especial incorrecto', 'err', 4500);
+            inp.value = '';
+            inp.focus();
+          }
+        });
+      };
+    },
+    notifyDownload(file, type) {
+      const u = RD.user || { name: 'Personal', role: 'recepcion' };
+      const ownerPhone = localStorage.getItem(PIN_OWNER_PHONE_KEY) || RD.pub?.gym_phone || '954196867';
+      const gymName = RD.pub?.gym_name || 'GIMNASIO RED GYM';
+      const nowStr = new Date().toLocaleString('es-PE');
+      const waText = [
+        `🚨 *ALERTA DE SEGURIDAD — DESCARGA DE ARCHIVO CONFIDENCIAL*`,
+        `• Gimnasio: *${gymName}*`,
+        `• Archivo descargado: *${file}*`,
+        `• Tipo: *${type}*`,
+        `• Usuario en sesión: *${u.name}* (Rol: *${u.role}*)`,
+        `• Fecha y hora exacta: *${nowStr}*`
+      ].join('\n');
+      const waUrl = RD.waLink(ownerPhone, waText);
+
+      // Si quien descarga es un trabajador de recepción/entrenador, mostrar aviso obligatorio con envío de notificación al dueño
+      if (u.role !== 'admin' && waUrl) {
+        RD.openModal('🚨 Descarga Registrada y Notificada al Propietario', `
+          <div class="banner mb" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:var(--fg)">
+            <b>Auditoría de Seguridad Activa:</b> La descarga del archivo <b>${RD.esc(file)}</b> (${RD.esc(type)}) por el usuario <b>${RD.esc(u.name)}</b> a las <b>${RD.esc(nowStr)}</b> ha quedado registrada de forma permanente en el sistema del propietario.
+          </div>
+          <div class="row end gap">
+            <a class="btn ok" target="_blank" rel="noopener" href="${waUrl}">${RD.icon('whatsapp', '', 15)} Enviar Constancia al WhatsApp del Dueño</a>
+          </div>
+        `);
+      }
+    },
+    async openPrivacyModal() {
+      const unlocked = RD.security.isUnlocked();
+      let alertData = { alerts: [], downloads_today: 0, failed_pins_today: 0, owner_alert_phone: RD.pub?.gym_phone || '954196867' };
+      try {
+        alertData = await RD.api.get('/security/download-alerts');
+        if (alertData.owner_alert_phone) localStorage.setItem(PIN_OWNER_PHONE_KEY, alertData.owner_alert_phone);
+      } catch {}
+
+      const m = RD.openModal('🔐 Centro de Privacidad, Cifrado de Datos y Alertas de Descarga', `
+        <div class="card flat mb" style="border:1px solid ${unlocked ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.35)'};background:${unlocked ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.05)'}">
+          <div class="row between wrap gap">
+            <div>
+              <h3 style="margin:0;color:${unlocked ? '#10b981' : 'var(--gold)'}">
+                ${unlocked ? `🔓 Visualización Completa Desbloqueada (${RD.security.remainingMin()} min restantes)` : '🔒 Modo Privacidad y Cifrado Visual Activo'}
+              </h3>
+              <p class="small muted" style="margin:4px 0 0">
+                ${unlocked
+                  ? 'Los números completos de DNI y teléfono están visibles temporalmente y las descargas están autorizadas.'
+                  : 'Los DNI (•••458) y celulares (954•••867) están parcialmente cifrados en pantalla para impedir capturas o fotos por terceros.'}
+              </p>
+            </div>
+            <div>
+              ${unlocked
+                ? `<button class="btn danger sm" id="btn_lock_now">${RD.icon('lock', '', 14)} Bloquear y Cifrar Ahora</button>`
+                : `<button class="btn primary sm" id="btn_unlock_now">${RD.icon('key', '', 14)} Desbloquear con PIN del Dueño</button>`}
+            </div>
+          </div>
+        </div>
+
+        <div class="grid g3 mb">
+          <div class="stat">
+            <div class="v">${alertData.downloads_today || 0}</div>
+            <div class="l">Descargas de Archivos Hoy</div>
+          </div>
+          <div class="stat">
+            <div class="v" style="color:${(alertData.failed_pins_today || 0) > 0 ? '#ef4444' : '#10b981'}">${alertData.failed_pins_today || 0}</div>
+            <div class="l">Intentos Fallidos de PIN Hoy</div>
+          </div>
+          <div class="stat">
+            <div class="v" style="font-size:1rem">Activa 24/7</div>
+            <div class="l">Marca de Agua Anti-Capturas</div>
+          </div>
+        </div>
+
+        <div class="card flat mb">
+          <h4 style="margin:0 0 6px">🛡️ Capas Activas contra Manipulación y Extracción de Datos</h4>
+          <div class="small muted" style="line-height:1.55">
+            • <b>Uso Estricto de Datos de Socios:</b> Nombre, DNI y Teléfono se emplean exclusivamente para crear su cuenta, código QR e historial interno.<br>
+            • <b>Cifrado Visual por Defecto:</b> En recepción y en Cloud Sheets los DNI y teléfonos se muestran ocultos (<code>•••458</code>) mientras no se ingrese el PIN del propietario.<br>
+            • <b>Marca de Agua Forense Anti-Fotos:</b> Toda pantalla muestra en fondo diagonal el nombre del trabajador en sesión y la hora exacta para rastrear cualquier foto o captura.<br>
+            • <b>Auditoría de Descargas:</b> Cada exportación de Excel, CSV, PDF o Base de Datos exige PIN y queda grabada abajo con alerta directa al WhatsApp del dueño (${RD.esc(alertData.owner_alert_phone)}).
+          </div>
+        </div>
+
+        <div class="card flat">
+          <div class="row between wrap gap mb">
+            <h4 style="margin:0">📋 Registro Inmutable de Descargas, Desbloqueos e Intentos de PIN (${(alertData.alerts || []).length})</h4>
+            ${RD.user?.role === 'admin' ? `<button class="btn sm ghost" id="btn_cfg_pin">⚙️ Cambiar PIN en Ajustes</button>` : ''}
+          </div>
+          <div class="tbl-wrap" style="max-height:250px;overflow-y:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha / Hora</th>
+                  <th>Evento</th>
+                  <th>Usuario</th>
+                  <th>Archivo / Detalle</th>
+                  <th>Notificar Dueño</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(alertData.alerts || []).map(a => {
+                  const p = a.parsed || {};
+                  const badgeCls = a.action === 'INTENTO_PIN_FALLIDO' ? 'denied' : a.action === 'ALERTA_DESCARGA_DATOS' ? 'warn' : 'ok';
+                  const label = a.action === 'INTENTO_PIN_FALLIDO' ? '⚠️ PIN Fallido' : a.action === 'ALERTA_DESCARGA_DATOS' ? '📥 Descarga Archivo' : a.action === 'DESBLOQUEO_PIN_DATOS' ? '🔓 Desbloqueo PIN' : a.action;
+                  const detailText = p.file ? `${p.file} (${p.type || ''})` : (p.reason || a.detail || '');
+                  const waMsg = `🚨 *REPORTE DE AUDITORÍA DE DATOS (${RD.pub?.gym_name || 'GIMNASIO'})*\n• Evento: *${label}*\n• Usuario: *${a.user_name || p.user || 'Personal'}* (${a.role || p.role || ''})\n• Detalle: *${detailText}*\n• Fecha/Hora: *${a.ts}*`;
+                  const waHref = RD.waLink(alertData.owner_alert_phone, waMsg);
+                  return `
+                    <tr>
+                      <td class="tiny muted">${RD.esc(a.ts || '')}</td>
+                      <td><span class="badge ${badgeCls} tiny">${RD.esc(label)}</span></td>
+                      <td><b>${RD.esc(a.user_name || p.user || 'Sistema')}</b> <span class="tiny muted">(${RD.esc(a.role || p.role || '')})</span></td>
+                      <td class="small">${RD.esc(detailText)}</td>
+                      <td>${waHref ? `<a class="btn sm ok" target="_blank" rel="noopener" href="${waHref}" title="Enviar alerta al WhatsApp del propietario">${RD.icon('whatsapp', '', 13)} Alerta</a>` : '—'}</td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="5" class="empty">Sin descargas ni alertas registradas todavía</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `, { wide: true });
+
+      const btnLock = m.el.querySelector('#btn_lock_now');
+      if (btnLock) btnLock.onclick = () => { m.close(); RD.security.lock(); };
+      const btnUnlock = m.el.querySelector('#btn_unlock_now');
+      if (btnUnlock) btnUnlock.onclick = () => { m.close(); RD.security.requirePin('Desbloqueo manual desde Centro de Privacidad'); };
+      const btnCfg = m.el.querySelector('#btn_cfg_pin');
+      if (btnCfg) btnCfg.onclick = () => { m.close(); if (RD.go) RD.go('settings'); };
+    },
+    mountWatermark() {
+      let wm = document.getElementById('rd_forensic_watermark');
+      if (!wm) {
+        wm = document.createElement('div');
+        wm.id = 'rd_forensic_watermark';
+        wm.style.cssText = 'position:fixed;inset:0;pointer-events:none;user-select:none;z-index:9990;overflow:hidden;opacity:0.032;display:grid;grid-template-columns:repeat(3, 1fr);grid-template-rows:repeat(4, 1fr);align-items:center;justify-items:center';
+        document.body.appendChild(wm);
+      }
+      const updateText = () => {
+        const u = RD.user || { name: 'RECEPCIÓN', role: 'staff' };
+        const gym = (RD.pub?.gym_name || 'GIMNASIO RED GYM').toUpperCase();
+        const ts = new Date().toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const stamp = `${gym} · SESIÓN: ${String(u.name || '').toUpperCase()} (${String(u.role || '').toUpperCase()}) · ${ts} · DATOS PROTEGIDOS`;
+        wm.innerHTML = Array.from({ length: 12 }, () =>
+          `<div style="transform:rotate(-24deg);font-size:11px;font-weight:900;letter-spacing:1px;white-space:nowrap;text-align:center;color:var(--fg)">${RD.esc(stamp)}</div>`
+        ).join('');
+      };
+      updateText();
+      if (!wm._timer) wm._timer = setInterval(updateText, 60000);
+    }
+  };
+  setInterval(() => { if (RD.security) RD.security.updateTopbarButton(); }, 15000);
 
   // ---------- Interfaz ----------
   RD.toast = (msg, type = 'ok', ms = 3200) => {
@@ -2000,12 +2265,12 @@
         </div>`,
       privacidad: `
         <div class="card flat mb">
-          <h3 style="display:flex;align-items:center;gap:8px;color:var(--gold)">${RD.icon('shield', 'gold', 20)} Política de Privacidad y Protección de Datos (Ley N° 29733 - Perú)</h3>
+          <h3 style="display:flex;align-items:center;gap:8px;color:var(--gold)">${RD.icon('shield', 'gold', 20)} Política de Privacidad y Uso Estricto de Datos (Ley N° 29733 - Perú)</h3>
           <p class="small muted">En cumplimiento de la <b>Ley N° 29733 — Ley de Protección de Datos Personales del Perú</b> y su Reglamento (D.S. N° 003-2013-JUS), GIMNASIO RED GYM garantiza la confidencialidad y seguridad de la información de sus socios:</p>
           <div class="list small mt">
-            <div class="item"><div><b>1. Finalidad del Tratamiento:</b> Los datos registrados (nombre, DNI, teléfono, fecha de nacimiento, fotografía de control de acceso, historial de pagos, asistencias y mediciones corporales) se utilizan exclusivamente para la gestión de tu membresía, seguridad de ingreso al local y seguimiento deportivo.</div></div>
-            <div class="item"><div><b>2. Confidencialidad y No Divulgación:</b> GIMNASIO RED GYM jamás vende, alquila ni cede tus datos personales o teléfonos a terceros ni empresas externas.</div></div>
-            <div class="item"><div><b>3. Derechos ARCO (Acceso, Rectificación, Cancelación y Oposición):</b> Como titular de tus datos, puedes actualizar tu información desde tu pestaña Perfil o solicitar la rectificación o baja de tus datos en recepción en cualquier momento.</div></div>
+            <div class="item"><div><b>1. Uso Estricto de los 3 Datos del Socio (Nombre, DNI y Teléfono):</b> Los datos solicitados al socio (Nombre Completo, DNI y Teléfono/WhatsApp) son utilizados <b>estricta y exclusivamente para la generación de su cuenta de usuario, creación de su código QR único, control de vigencia de membresía y avisos internos del gimnasio</b>, sin ningún uso indebido ni cesión externa.</div></div>
+            <div class="item"><div><b>2. Cifrado Visual en Pantalla y PIN Especial del Propietario:</b> Para proteger la base de datos frente a capturas de pantalla, fotografías o manipulaciones por terceros en recepción, el sistema aplica <b>enmascaramiento/cifrado visual por defecto</b> sobre los números de DNI (<code>•••458</code>) y teléfonos (<code>954•••867</code>). La visualización completa y la descarga de archivos confidenciales requieren el <b>PIN Especial del Propietario</b> y notifican automáticamente toda descarga en la bitácora de auditoría.</div></div>
+            <div class="item"><div><b>3. Uso Exclusivo de WhatsApp Corporativo del Negocio en Recepción:</b> Dado que la computadora o laptop de recepción es utilizada tanto por la administración como por los trabajadores de turno para atender consultas, leer mensajes y publicar avisos, el WhatsApp vinculado en el equipo del gimnasio debe corresponder a un <b>número exclusivo del negocio (WhatsApp Business)</b> y nunca al WhatsApp personal del propietario.</div></div>
             <div class="item"><div><b>4. Cifrado de Credenciales:</b> Las contraseñas de socios y personal se almacenan mediante algoritmo criptográfico unidireccional <b>Bcrypt (Factor 10)</b>; ni siquiera el administrador puede ver tu contraseña en texto plano.</div></div>
           </div>
         </div>`,
@@ -2034,18 +2299,20 @@
         </div>`,
       copyright: `
         <div class="card flat mb">
-          <h3 style="display:flex;align-items:center;gap:8px;color:var(--gold)">${RD.icon('lock', 'gold', 20)} Propiedad Intelectual, Derechos de Autor y Ciberseguridad</h3>
+          <h3 style="display:flex;align-items:center;gap:8px;color:var(--gold)">${RD.icon('lock', 'gold', 20)} Propiedad Intelectual, Ciberseguridad y Responsabilidad Operativa</h3>
           <div class="list small mt">
-            <div class="item"><div><b>Propiedad Intelectual y Marca:</b> © ${year} <b>GIMNASIO RED GYM · Chivay, Caylloma, Arequipa - Perú</b>. Todos los derechos reservados. El nombre comercial, logotipo, diseño de interfaz, código fuente, arquitectura de base de datos, rutinas estructuradas y sistema de control de acceso son propiedad exclusiva de GIMNASIO RED GYM. Queda prohibida su reproducción, copia o distribución no autorizada conforme al <b>Decreto Legislativo N° 822 (Ley sobre el Derecho de Autor en el Perú)</b>.</div></div>
-            <div class="item"><div><b>Arquitectura Anti-Hackeo y Ciberdefensa:</b>
+            <div class="item"><div><b>Propiedad Intelectual y Marca:</b> © ${year} <b>GIMNASIO RED GYM · Chivay, Caylloma, Arequipa - Perú</b>. Todos los derechos reservados conforme al <b>Decreto Legislativo N° 822 (Ley sobre el Derecho de Autor en el Perú)</b>.</div></div>
+            <div class="item"><div><b>Arquitectura Anti-Hackeo, Anti-Virus y Ciberdefensa Multicapa:</b>
               <ul style="margin:.4rem 0 0 1.1rem;padding:0">
                 <li><b>Anti-Inyección SQL (SQLi):</b> 100% de consultas ejecutadas con sentencias preparadas parametrizadas en motor SQLite WAL.</li>
                 <li><b>Anti-Falsificación de QR:</b> Firma criptográfica <code>HMAC-SHA256</code> dinámica que cambia cada 60 segundos; las capturas de pantalla caducan automáticamente.</li>
-                <li><b>Anti-Fuerza Bruta y DDoS:</b> Bloqueo automático temporal por IP y por cuenta ante intentos fallidos repetidos de inicio de sesión.</li>
-                <li><b>Cabeceras de Seguridad Bancaria:</b> Protección activa <code>X-Frame-Options: SAMEORIGIN</code>, <code>X-Content-Type-Options: nosniff</code>, <code>Strict-Transport-Security (HSTS)</code> y cookies seguras <code>HttpOnly</code>.</li>
-                <li><b>Respaldo Triple Inmune a Caídas:</b> Sincronización continua en Base de Datos Local WAL + Bóveda JSON + Nube Cifrada <b>Upstash Redis</b>.</li>
+                <li><b>Anti-Fuerza Bruta y Anti-DDoS:</b> Bloqueo automático temporal por IP ante intentos fallidos repetidos de contraseña o PIN Especial, y limitación de 300 peticiones/minuto.</li>
+                <li><b>Filtro Anti-Malware y Cabeceras Bancarias:</b> Inspección binaria de archivos (bloqueo total de ejecutables/scripts) y cabeceras <code>X-Frame-Options: SAMEORIGIN</code>, <code>X-Content-Type-Options: nosniff</code>, <code>HSTS</code> y sesiones <code>HttpOnly</code>.</li>
+                <li><b>Cifrado Visual, PIN de Datos, Marca de Agua Forense y Alerta de Descargas:</b> Enmascaramiento de DNI/Teléfonos en pantalla, marca de agua dinámica anti-capturas con identificación de usuario y registro inmutable con notificación de cada archivo descargado.</li>
+                <li><b>Respaldo Quíntuple Inmune a Caídas:</b> Base de Datos Local WAL + Bóveda JSON + Nube Cifrada <b>Upstash Redis</b> + Sincronización <b>Google Sheets</b> + <b>Modo Local PC (Offline)</b>.</li>
               </ul>
             </div></div>
+            <div class="item"><div><b>Exclusión de Garantía por Mala Manipulación o Sabotaje de Trabajadores:</b> Cualquier caída, desconfiguración, alteración de registros o falla originada por manipulación indebida, negligente o malintencionada por parte de trabajadores o terceros en el gimnasio es de exclusiva responsabilidad del propietario del negocio y no se encuentra cubierta por la garantía técnica del software.</div></div>
           </div>
         </div>`
     };

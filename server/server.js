@@ -186,7 +186,11 @@ api.get('/admin/security-audit', staff('admin'), wrap((req, res) => {
       brute_force_shield: `Activo (Máx 12 intentos/min por IP · ${attempts.size} IPs en monitoreo)`,
       ddos_flood_shield: `Activo (Máx 300 req/min por IP · ${floodMap.size} IPs activas)`,
       session_isolation: 'Activo (Cookies HttpOnly + SameSite=Lax + revocación remota)',
-      legal_compliance: 'Ley N° 29733 (Protección de Datos Personales Perú) & Código del Consumidor'
+      data_privacy_pin: 'Activo (Cifrado/Enmascaramiento visual de DNI y Celular + PIN Especial del Dueño)',
+      anti_screenshot_watermark: 'Activo (Marca de agua forense en pantalla y Sheets con usuario/fecha/hora)',
+      download_audit_shield: 'Activo (Registro inmutable y alerta al dueño por cada descarga Excel/PDF/CSV/DB)',
+      antivirus_upload_shield: 'Activo (Filtro binario MIME estricto anti-ejecutables y anti-scripts)',
+      legal_compliance: 'Ley N° 29733 (Uso estricto de Nombre, DNI y Teléfono para cuentas y QR internos)'
     },
     resilience: {
       db_integrity: dbIntegrity,
@@ -1728,6 +1732,14 @@ api.get('/reports/export/excel', staff('admin', 'recepcion'), wrap(async (req, r
   const ds = buildDataset({ from, to, q, settings });
   const buf = await buildXlsx(ds, { publicDir: path.join(__dirname, '..', 'public') });
   const filename = `Reporte_RED_GYM_${from}_al_${to}.xlsx`;
+  audit(req.user.id, 'ALERTA_DESCARGA_DATOS', {
+    file: filename,
+    type: 'Libro Maestro Excel (.xlsx)',
+    user: req.user.name,
+    role: req.user.role,
+    period: `${from} al ${to}`,
+    ip: req.ip
+  });
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.send(buf);
@@ -1743,6 +1755,14 @@ api.get('/reports/export/csv', staff('admin', 'recepcion'), wrap((req, res) => {
   const table = ds.tables[tableKey] || ds.tables.daily;
   const csv = tableToCsv(table, req.query.sep || ',');
   const filename = `Reporte_${table.name.replace(/\s+/g, '_')}_${from}_al_${to}.csv`;
+  audit(req.user.id, 'ALERTA_DESCARGA_DATOS', {
+    file: filename,
+    type: `Tabla CSV (${table.name})`,
+    user: req.user.name,
+    role: req.user.role,
+    period: `${from} al ${to}`,
+    ip: req.ip
+  });
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.send(csv);
@@ -1936,13 +1956,103 @@ api.put('/users/:id', staff('admin'), wrap((req, res) => {
   audit(req.user.id, 'user.update', { id: u.id });
   res.json({ ok: true });
 }));
-api.get('/settings', staff(), wrap((req, res) => res.json(getSettings())));
+api.get('/settings', staff(), wrap((req, res) => {
+  const s = getSettings();
+  if (req.user.role !== 'admin') {
+    s.owner_data_pin = '****';
+  }
+  res.json(s);
+}));
 api.put('/settings', staff('admin', 'recepcion'), wrap((req, res) => {
-  const allowed = ['gym_name', 'gym_slogan', 'gym_phone', 'gym_address', 'warn_days', 'grace_days', 'passback_min', 'stay_min', 'opening', 'color', 'google_sheet_url', 'yape_phone', 'yape_name', 'whatsapp_community_url', 'whatsapp_members_group_url'];
-  q.tx(() => { for (const k of allowed) if (k in (req.body || {})) q.run('INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)', k, String(req.body[k])); });
-  audit(req.user.id, 'settings.update', req.body);
+  const allowed = ['gym_name', 'gym_slogan', 'gym_phone', 'gym_address', 'warn_days', 'grace_days', 'passback_min', 'stay_min', 'opening', 'color', 'google_sheet_url', 'yape_phone', 'yape_name', 'whatsapp_community_url', 'whatsapp_members_group_url', 'owner_alert_phone', 'privacy_mask_default'];
+  if (req.user.role === 'admin' && req.body && req.body.owner_data_pin && String(req.body.owner_data_pin).trim() !== '****') {
+    allowed.push('owner_data_pin');
+  }
+  q.tx(() => { for (const k of allowed) if (k in (req.body || {})) q.run('INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)', k, String(req.body[k]).trim()); });
+  audit(req.user.id, 'settings.update', { ...req.body, owner_data_pin: req.body?.owner_data_pin ? '***' : undefined });
   res.json({ ok: true });
 }));
+
+// ---------------- Protección de Datos Sensibles (PIN del Propietario y Auditoría de Descargas) ----------------
+api.post('/security/verify-pin', staff(), wrap((req, res) => {
+  if (limited(req)) return bad(res, 'Demasiados intentos de PIN. Bloqueo temporal anti-fuerza bruta activo por 1 minuto.', 429);
+  const s = getSettings();
+  const expectedPin = String(s.owner_data_pin || '2026').trim();
+  const inputPin = String(req.body?.pin || '').trim();
+  const reason = String(req.body?.reason || 'Visualización completa / Descarga de datos').slice(0, 120);
+  if (!inputPin || inputPin !== expectedPin) {
+    audit(req.user.id, 'INTENTO_PIN_FALLIDO', {
+      user: req.user.name,
+      username: req.user.username,
+      role: req.user.role,
+      reason,
+      ip: req.ip
+    });
+    return bad(res, 'PIN Especial del Propietario incorrecto. El intento fallido ha quedado registrado en la bitácora de seguridad.', 403);
+  }
+  audit(req.user.id, 'DESBLOQUEO_PIN_DATOS', {
+    user: req.user.name,
+    username: req.user.username,
+    role: req.user.role,
+    reason,
+    ip: req.ip
+  });
+  res.json({
+    ok: true,
+    unlocked_until: Date.now() + 15 * 60 * 1000,
+    owner_alert_phone: s.owner_alert_phone || s.gym_phone || '954196867',
+    gym_name: s.gym_name || 'GIMNASIO RED GYM'
+  });
+}));
+
+api.post('/security/log-export', staff(), wrap((req, res) => {
+  const s = getSettings();
+  const file = String(req.body?.file || 'Documento Confidencial').slice(0, 140);
+  const type = String(req.body?.type || 'Exportación de Datos').slice(0, 100);
+  const detail = {
+    file,
+    type,
+    user: req.user.name,
+    username: req.user.username,
+    role: req.user.role,
+    ip: req.ip
+  };
+  audit(req.user.id, 'ALERTA_DESCARGA_DATOS', detail);
+  res.json({
+    ok: true,
+    owner_alert_phone: s.owner_alert_phone || s.gym_phone || '954196867',
+    gym_name: s.gym_name || 'GIMNASIO RED GYM',
+    detail
+  });
+}));
+
+api.get('/security/download-alerts', staff(), wrap((req, res) => {
+  const s = getSettings();
+  const today = L.limaDay();
+  const rows = q.all(`
+    SELECT a.id, a.action, a.detail, a.ts, u.name AS user_name, u.username, u.role
+    FROM audit a
+    LEFT JOIN users u ON u.id = a.user_id
+    WHERE a.action IN ('ALERTA_DESCARGA_DATOS', 'DESBLOQUEO_PIN_DATOS', 'INTENTO_PIN_FALLIDO', 'backup.import_json', 'backup.restore_db')
+    ORDER BY a.id DESC
+    LIMIT 60
+  `);
+  const parsed = rows.map(r => {
+    let d = {};
+    try { d = JSON.parse(r.detail || '{}'); } catch { d = { raw: r.detail }; }
+    return { ...r, parsed: d };
+  });
+  const downloadsToday = parsed.filter(r => r.action === 'ALERTA_DESCARGA_DATOS' && String(r.ts || '').slice(0, 10) === today).length;
+  const failedPinsToday = parsed.filter(r => r.action === 'INTENTO_PIN_FALLIDO' && String(r.ts || '').slice(0, 10) === today).length;
+  res.json({
+    owner_alert_phone: s.owner_alert_phone || s.gym_phone || '954196867',
+    privacy_mask_default: s.privacy_mask_default !== '0',
+    downloads_today: downloadsToday,
+    failed_pins_today: failedPinsToday,
+    alerts: parsed
+  });
+}));
+
 api.get('/audit', staff('admin'), wrap((req, res) => res.json(q.all('SELECT a.*, u.name user_name FROM audit a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 200'))));
 api.get('/backup', staff('admin'), wrap((req, res) => {
   const dir = path.join(DATA_DIR, 'backups');
@@ -1951,6 +2061,13 @@ api.get('/backup', staff('admin'), wrap((req, res) => {
   const safePath = f.split(path.sep).join('/');
   db.exec(`VACUUM INTO '${safePath}'`);
   const filename = `redgym-${L.limaDay()}.db`;
+  audit(req.user.id, 'ALERTA_DESCARGA_DATOS', {
+    file: filename,
+    type: 'Base de Datos Completa SQLite (.db)',
+    user: req.user.name,
+    role: req.user.role,
+    ip: req.ip
+  });
   res.setHeader('Content-Type', 'application/x-sqlite3');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   const stream = fs.createReadStream(f);
@@ -1983,6 +2100,13 @@ api.get('/backup/export-json', staff('admin'), wrap((req, res) => {
     cash_shifts: q.all('SELECT * FROM cash_shifts')
   };
   const filename = `redgym-data-${L.limaDay()}.json`;
+  audit(req.user.id, 'ALERTA_DESCARGA_DATOS', {
+    file: filename,
+    type: 'Respaldo Portátil Completo (.json)',
+    user: req.user.name,
+    role: req.user.role,
+    ip: req.ip
+  });
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.send(JSON.stringify(data, null, 2));

@@ -604,9 +604,10 @@
       <button class="btn sm" onclick="setQuickRange(30)" title="Últimos 30 días">30d</button>
       <button class="btn sm" onclick="setQuickRange(365)" title="Último año completo">1 Año</button>
       <button class="btn primary" id="btnRefresh" onclick="loadDataset(true)">🔄 Actualizar Datos</button>
+      <button class="btn" id="btnSheetsPin" onclick="toggleSheetsPin()" title="Desbloquear o cifrar DNI y teléfonos con PIN Especial del Propietario">🔐 Datos Cifrados (PIN)</button>
       <button class="btn excel" onclick="downloadExcel()">📥 Descargar Excel (.xlsx)</button>
       <button class="btn" onclick="downloadActiveCsv()">📄 CSV Hoja</button>
-      <button class="btn" onclick="window.print()" title="Imprimir o guardar en PDF A4 Horizontal la hoja activa">🖨️ Imprimir / PDF</button>
+      <button class="btn" onclick="printSheetsProtected()" title="Imprimir o guardar en PDF A4 Horizontal la hoja activa">🖨️ Imprimir / PDF</button>
       <button class="btn" onclick="openGoogleDriveModal()">☁️ Google Drive / Script</button>
       <button class="btn" id="btnThemeSheets" onclick="toggleSheetsTheme()" title="Alternar Modo Claro / Oscuro">☀️ Claro</button>
       <a class="btn" href="/admin/">⬅ Panel Admin</a>
@@ -660,8 +661,123 @@
     </div>
   </div>
 
+  <!-- Modal PIN Especial del Propietario (Sheets) -->
+  <div class="modal-back" id="sheetsPinModal" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-card" style="max-width:440px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="font-size:15.5px;font-weight:800">🔐 PIN Especial del Propietario</h3>
+        <button class="btn sm" onclick="document.getElementById('sheetsPinModal').style.display='none'">✕</button>
+      </div>
+      <p id="sheetsPinReason" style="font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:12px">
+        Por seguridad contra capturas de pantalla o extracciones de datos en recepción, los DNI, teléfonos y descargas de archivos están protegidos. Ingresa el PIN del Propietario para autorizar:
+      </p>
+      <form id="sheetsPinForm">
+        <input id="sheetsPinInput" type="password" inputmode="numeric" maxlength="12" placeholder="••••" required style="width:100%;padding:10px;font-size:18px;font-weight:900;text-align:center;letter-spacing:6px;border-radius:8px;border:1px solid var(--grid-line);background:var(--bg);color:var(--text);margin-bottom:10px">
+        <div id="sheetsPinErr" style="display:none;color:#f87171;font-size:12px;margin-bottom:8px;font-weight:700"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button type="button" class="btn" onclick="document.getElementById('sheetsPinModal').style.display='none'">Cancelar</button>
+          <button type="submit" class="btn primary">🔓 Verificar PIN (15 min)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Marca de agua forense anti-capturas en Cloud Sheets -->
+  <div id="sheetsForensicWatermark" style="position:fixed;inset:0;pointer-events:none;user-select:none;z-index:150;overflow:hidden;opacity:0.032;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);align-items:center;justify-items:center"></div>
+
   <script>
     const TOKEN_KEY = 'rg_staff_token';
+    const PIN_UNLOCK_KEY = 'rd_pin_unlocked_until';
+    let PENDING_PIN_CALLBACK = null;
+
+    function isPinUnlocked() {
+      return Number(sessionStorage.getItem(PIN_UNLOCK_KEY) || 0) > Date.now();
+    }
+
+    function updateSheetsPinButton() {
+      const b = document.getElementById('btnSheetsPin');
+      if (!b) return;
+      if (isPinUnlocked()) {
+        const mins = Math.max(1, Math.ceil((Number(sessionStorage.getItem(PIN_UNLOCK_KEY)) - Date.now()) / 60000));
+        b.textContent = `🔓 Datos Visibles (${mins}m)`;
+        b.style.borderColor = '#22c55e';
+        b.style.color = '#4ade80';
+      } else {
+        b.textContent = '🔐 Datos Cifrados (PIN)';
+        b.style.borderColor = '';
+        b.style.color = '';
+      }
+    }
+
+    function requireSheetsPin(reason, callback) {
+      if (isPinUnlocked()) {
+        callback();
+        return;
+      }
+      PENDING_PIN_CALLBACK = callback;
+      document.getElementById('sheetsPinReason').innerHTML = `Acción solicitada: <b>${esc(reason)}</b>.<br>Ingresa el PIN Especial del Propietario (toda descarga o acceso queda registrado y notifica al dueño):`;
+      document.getElementById('sheetsPinErr').style.display = 'none';
+      const inp = document.getElementById('sheetsPinInput');
+      inp.value = '';
+      document.getElementById('sheetsPinModal').style.display = 'flex';
+      setTimeout(() => inp.focus(), 60);
+    }
+
+    function toggleSheetsPin() {
+      if (isPinUnlocked()) {
+        sessionStorage.removeItem(PIN_UNLOCK_KEY);
+        updateSheetsPinButton();
+        renderActiveView();
+      } else {
+        requireSheetsPin('Revelar DNI y teléfonos completos en Cloud Sheets', () => {
+          updateSheetsPinButton();
+          renderActiveView();
+        });
+      }
+    }
+
+    document.getElementById('sheetsPinForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const token = await ensureStaffAuth();
+      if (!token) return showInlineLogin();
+      const pin = document.getElementById('sheetsPinInput').value.trim();
+      const errEl = document.getElementById('sheetsPinErr');
+      errEl.style.display = 'none';
+      try {
+        const r = await fetch('/api/security/verify-pin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          credentials: 'include',
+          body: JSON.stringify({ pin, reason: 'Acceso completo / descarga en Cloud Sheets' })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'PIN Especial incorrecto');
+        sessionStorage.setItem(PIN_UNLOCK_KEY, String(d.unlocked_until || (Date.now() + 15 * 60 * 1000)));
+        document.getElementById('sheetsPinModal').style.display = 'none';
+        updateSheetsPinButton();
+        renderActiveView();
+        if (PENDING_PIN_CALLBACK) {
+          const cb = PENDING_PIN_CALLBACK;
+          PENDING_PIN_CALLBACK = null;
+          cb();
+        }
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+      }
+    };
+
+    function mountSheetsWatermark() {
+      const wm = document.getElementById('sheetsForensicWatermark');
+      if (!wm) return;
+      let u = { name: 'RECEPCIÓN', role: 'staff' };
+      try { u = JSON.parse(localStorage.getItem('rd_staff_user') || 'null') || u; } catch {}
+      const ts = new Date().toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const text = `CLOUD SHEETS CONFIDENCIAL · USUARIO: ${String(u.name || '').toUpperCase()} (${String(u.role || '').toUpperCase()}) · ${ts} · PROHIBIDA CAPTURA`;
+      wm.innerHTML = Array.from({ length: 12 }, () => `<div style="transform:rotate(-24deg);font-size:11px;font-weight:900;letter-spacing:1px;white-space:nowrap">${esc(text)}</div>`).join('');
+    }
+    setInterval(() => { updateSheetsPinButton(); mountSheetsWatermark(); }, 30000);
+    setTimeout(() => { updateSheetsPinButton(); mountSheetsWatermark(); }, 200);
     let DATASET = null;
     let ACTIVE_TAB = 'dashboard';
     let SORT_COL = -1;
@@ -1013,11 +1129,17 @@
       return s;
     }
 
-    function formatCell(val, type) {
+    function formatCell(val, type, headerName) {
       if (val === null || val === undefined || val === '') return '';
       if (type === 'money') return fmtMoney(val);
       if (type === 'pct') return (Number(val || 0) * 100).toFixed(1) + '%';
       const s = String(val);
+      if (!isPinUnlocked() && headerName && /dni|documento|tel[eé]fono|celular|whatsapp/i.test(headerName) && s.length >= 4 && s !== '—') {
+        const masked = /tel|cel|what/i.test(headerName) && s.length >= 6
+          ? s.slice(0, 3) + '•••' + s.slice(-3)
+          : '•••' + s.slice(-3);
+        return `<span title="Cifrado por seguridad. Haz clic en 🔐 Datos Cifrados (PIN) para ver completo" style="font-family:monospace;opacity:0.85">🔒 ${esc(masked)}</span>`;
+      }
       if (['Vigente', 'Activo', 'Sí', 'Abierto', 'Salida registrada'].includes(s)) {
         return `<span class="pill ok">${esc(s)}</span>`;
       }
@@ -1088,10 +1210,10 @@
       const bodyHtml = rows.length ? rows.map((r, rIdx) => `
         <tr>
           <td class="row-num">${rIdx + 1}</td>
-          ${headers.map((_, cIdx) => {
+          ${headers.map((hName, cIdx) => {
             const t = types[cIdx] || 'text';
             const align = ['money', 'int', 'dec', 'pct', 'min'].includes(t) ? 't-right' : '';
-            return `<td class="${align}">${formatCell(r[cIdx], t)}</td>`;
+            return `<td class="${align}">${formatCell(r[cIdx], t, hName)}</td>`;
           }).join('')}
         </tr>
       `).join('') : `<tr><td class="row-num">-</td><td colspan="${headers.length}" style="text-align:center;padding:30px;color:var(--muted)">No hay registros que coincidan con el filtro en esta hoja.</td></tr>`;
@@ -1122,38 +1244,57 @@
     }
 
     async function downloadExcel() {
-      const token = await ensureStaffAuth();
-      if (!token) return showInlineLogin();
-      const from = document.getElementById('dateFrom').value;
-      const to = document.getElementById('dateTo').value;
-      const r = await fetch(`/api/reports/export/excel?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, {
-        headers: { 'Authorization': 'Bearer ' + token },
-        credentials: 'include'
+      requireSheetsPin('Descargar Libro Maestro Completo en Excel (.xlsx)', async () => {
+        const token = await ensureStaffAuth();
+        if (!token) return showInlineLogin();
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+        const r = await fetch(`/api/reports/export/excel?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, {
+          headers: { 'Authorization': 'Bearer ' + token },
+          credentials: 'include'
+        });
+        if (!r.ok) return alert('Error al generar el archivo Excel');
+        const blob = await r.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Libro_Maestro_RED_GYM_${from}_al_${to}.xlsx`;
+        a.click();
       });
-      if (!r.ok) return alert('Error al generar el archivo Excel');
-      const blob = await r.blob();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `Libro_Maestro_RED_GYM_${from}_al_${to}.xlsx`;
-      a.click();
     }
 
     async function downloadActiveCsv() {
-      const token = await ensureStaffAuth();
-      if (!token) return showInlineLogin();
-      const tab = ACTIVE_TAB === 'dashboard' ? 'daily' : ACTIVE_TAB;
-      const from = document.getElementById('dateFrom').value;
-      const to = document.getElementById('dateTo').value;
-      const r = await fetch(`/api/reports/export/csv?table=${encodeURIComponent(tab)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, {
-        headers: { 'Authorization': 'Bearer ' + token },
-        credentials: 'include'
+      requireSheetsPin('Exportar Hoja Activa en CSV', async () => {
+        const token = await ensureStaffAuth();
+        if (!token) return showInlineLogin();
+        const tab = ACTIVE_TAB === 'dashboard' ? 'daily' : ACTIVE_TAB;
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+        const r = await fetch(`/api/reports/export/csv?table=${encodeURIComponent(tab)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, {
+          headers: { 'Authorization': 'Bearer ' + token },
+          credentials: 'include'
+        });
+        if (!r.ok) return alert('Error al exportar CSV');
+        const blob = await r.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `RED_GYM_${tab}_${to}.csv`;
+        a.click();
       });
-      if (!r.ok) return alert('Error al exportar CSV');
-      const blob = await r.blob();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `RED_GYM_${tab}_${to}.csv`;
-      a.click();
+    }
+
+    function printSheetsProtected() {
+      requireSheetsPin('Imprimir o Guardar en PDF Hoja de Cloud Sheets', async () => {
+        const token = await ensureStaffAuth();
+        if (token) {
+          fetch('/api/security/log-export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            credentials: 'include',
+            body: JSON.stringify({ file: `CloudSheets_${ACTIVE_TAB}.pdf`, type: 'Impresión PDF desde Cloud Sheets' })
+          }).catch(() => {});
+        }
+        window.print();
+      });
     }
 
     function openGoogleDriveModal() {
